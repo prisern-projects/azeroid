@@ -213,7 +213,11 @@ class AzeroidActivity : AppCompatActivity() {
             onScreenController = overlay,
             fexPreset = if (battleNet) EmulationMode.STABLE.fexPreset else prefs.emulation.fexPreset,
             gpuDriverVersion = prefs.gpuDriver.engineVersion,
-            extraEnv = if (battleNet) mapOf("WINEDLLOVERRIDES" to "locationapi=d") else emptyMap(),
+            extraEnv = if (battleNet) mapOf(
+                "WINEDLLOVERRIDES" to "locationapi=d",
+                // Wine errors + crash reports (not fixme spam) into the session log, for "Share log".
+                "WINEDEBUG" to "fixme-all",
+            ) else emptyMap(),
             gamepadToGame = gameNext,
         ))
         when {

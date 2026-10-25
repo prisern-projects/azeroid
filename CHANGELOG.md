@@ -2,6 +2,12 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.1.4] - 2026-10-25
+
+- Battle.net sessions now record Wine's error messages and crash reports in the session log.
+  This is needed to diagnose why Battle.net's background service (Agent.exe) restarts every ~15 seconds,
+  which makes the sign-in page loop and go black.
+
 ## [0.1.3] - 2026-10-25
 
 - **Fixed the Battle.net crash** ("closes back to Azeroid" while the login window loads). A race condition
