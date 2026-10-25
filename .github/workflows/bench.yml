@@ -1,0 +1,58 @@
+name: Battle.net bench
+
+# Starts Battle.net under Wine ARM64EC + FEX (Hangover) on an ARM64 Linux runner and publishes screenshots
+# and logs as the pre-release "bench-latest". Lets us iterate on Battle.net without a phone.
+on:
+  workflow_dispatch:
+    inputs:
+      bnet_hodll: { description: 'Translator DLL for Battle.net', default: 'libwow64fex.dll' }
+      bnet_args: { description: 'Battle.net arguments', default: '--disable-gpu --enable-features=NetworkServiceInProcess2' }
+      winedebug: { description: 'WINEDEBUG', default: 'fixme-all' }
+  push:
+    branches: [main]
+    paths: ['bench/**', '.github/workflows/bench.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  battlenet:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 60
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BNET_HODLL: ${{ inputs.bnet_hodll || 'libwow64fex.dll' }}
+      BNET_ARGS: ${{ inputs.bnet_args || '--disable-gpu --enable-features=NetworkServiceInProcess2' }}
+      WINEDEBUG: ${{ inputs.winedebug || 'fixme-all' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Hangover (Wine ARM64EC + FEX)
+        run: |
+          set -e
+          sudo apt-get update -q
+          sudo apt-get install -yq xvfb imagemagick cabextract
+          gh release list -R AndreRH/hangover -L 5
+          tag=$(gh release list -R AndreRH/hangover -L 1 --exclude-pre-releases --json tagName -q '.[0].tagName')
+          echo "hangover $tag"
+          mkdir -p "$RUNNER_TEMP/hangover" && cd "$RUNNER_TEMP/hangover"
+          gh release view "$tag" -R AndreRH/hangover --json assets -q '.assets[].name'
+          gh release download "$tag" -R AndreRH/hangover -p '*24.04*arm64*' || gh release download "$tag" -R AndreRH/hangover -p '*noble*'
+          ls -la
+          for f in *.tar *.tar.xz *.tgz; do [ -f "$f" ] && tar -xf "$f"; done
+          sudo apt-get install -yq ./*.deb $(find . -name '*.deb' -not -path './*.deb')
+          wine --version
+
+      - name: Run bench
+        env:
+          OUT: ${{ github.workspace }}/bench-out
+        run: bench/run-battlenet.sh 2>&1 | tee bench-out-console.log
+
+      - name: Publish results
+        if: always()
+        run: |
+          mkdir -p bench-out && cp bench-out-console.log bench-out/ 2>/dev/null || true
+          tar -czf bench-results.tar.gz bench-out
+          gh release delete bench-latest --yes --cleanup-tag 2>/dev/null || true
+          gh release create bench-latest bench-results.tar.gz bench-out/*.png --prerelease --target "$GITHUB_SHA" \
+            --title "Battle.net bench (latest run)" --notes "HODLL=$BNET_HODLL ARGS=$BNET_ARGS WINEDEBUG=$WINEDEBUG"
