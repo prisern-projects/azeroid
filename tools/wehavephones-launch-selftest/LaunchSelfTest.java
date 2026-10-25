@@ -328,7 +328,7 @@ public final class LaunchSelfTest {
         options.coldExec = true;
         String start = WeHavePhonesLaunchPlan.appendBnetFlags(bnetBat, WeHavePhonesLaunchPlan.startFlags(options, retail));
         check("start bat keeps dll copies", true, start.contains("copy /Y \"C:\\arm64-vkd3d.dll\""));
-        check("start bat keeps the CEF network workaround and launch request", "Battle.net.exe --disable-gpu --enable-features=NetworkServiceInProcess2 --autostarted --exec=\"launch WoW\"", lastLine(start));
+        check("start bat keeps the CEF network workaround and launch request", "Battle.net.exe --disable-gpu --enable-features=NetworkServiceInProcess2 --renderer-process-limit=1 --disable-site-isolation-trials --disable-gpu-shader-disk-cache --autostarted --exec=\"launch WoW\"", lastLine(start));
         check("open only selects the game page", "--game=wow_classic_era", WeHavePhonesLaunchPlan.openFlags("wow_classic_era"));
         check("open without a selection keeps the home page", "", WeHavePhonesLaunchPlan.openFlags(null));
         check("open rejects shell arguments", "", WeHavePhonesLaunchPlan.openFlags("wow & start Wow.exe"));
@@ -403,7 +403,7 @@ public final class LaunchSelfTest {
 
     private static void firstLoginConfig() throws Exception {
         String installer = "D:\\Installer Folder\\Battle.net-Setup.exe";
-        String flags = "--disable-gpu --enable-features=NetworkServiceInProcess2";
+        String flags = "--disable-gpu --enable-features=NetworkServiceInProcess2 --renderer-process-limit=1 --disable-site-isolation-trials --disable-gpu-shader-disk-cache";
         String batch = WeHavePhonesLaunchPlan.installerBat(installer, true, flags);
         check("first installer: runtime flags forwarded with quoted installer path",
                 "\"" + installer + "\" " + flags, lastLine(batch));

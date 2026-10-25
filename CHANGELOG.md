@@ -2,6 +2,13 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.2.2] - 2026-10-25
+
+- **Cause found:** the WoW install "crash" is Android killing Azeroid for low memory (Diagnostics showed
+  `LOW_MEMORY` while the app was in the foreground). It is not a Battle.net bug.
+- Battle.net now runs with fewer browser processes (one renderer, no per-site processes, no GPU shader
+  cache). Each of those processes runs under x86 translation, so this frees real RAM during the install.
+
 ## [0.2.1] - 2026-10-25
 
 - **Crash forensics for the WoW install crash.** When a session ends, Azeroid now writes how it ended to

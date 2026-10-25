@@ -112,7 +112,7 @@ def main():
     p10 = profiles.get("p10-ge34", {})
     print("[wehavephones-runtime-selftest] p10-ge34 (verified single runtime)")
     expect(p10.get("wineVersion"), "proton-10.0-34-arm64ec", "p10-ge34 wineVersion")
-    expect(p10.get("bnetFlags"), "--disable-gpu --enable-features=NetworkServiceInProcess2", "p10-ge34 bnetFlags")
+    expect(p10.get("bnetFlags"), "--disable-gpu --enable-features=NetworkServiceInProcess2 --renderer-process-limit=1 --disable-site-isolation-trials --disable-gpu-shader-disk-cache", "p10-ge34 bnetFlags")
     expect(artifact_tuples(p10, "ntdll"), EXPECTED_P10_GE34_NTDLL, "p10-ge34 ntdll pair")
     expect(artifact_tuples(p10, "files"), EXPECTED_P10_GE34_FILES, "p10-ge34 WoW DLL files")
 
