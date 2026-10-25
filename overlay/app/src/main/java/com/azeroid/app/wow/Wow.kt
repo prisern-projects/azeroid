@@ -7,6 +7,11 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
 import java.io.File
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import java.security.KeyStore
+import java.security.MessageDigest
+import java.security.cert.X509Certificate
 
 /** One installed WoW Classic game, e.g. Classic Era in "World of Warcraft/_classic_era_". */
 data class WowInstall(val label: String, val folder: File, val exe: File, val windowsExe: String)
@@ -69,6 +74,7 @@ object Wow {
      * hardware acceleration and streaming just cause black windows and crashes.
      */
     fun tuneBattleNet(container: Container) {
+        installRootCertificates(container)
         val file = File(Engine.windowsUserDir(container), "AppData/Roaming/Battle.net/Battle.net.config")
         file.parentFile?.mkdirs()
         val json = runCatching { JSONObject(file.readText()) }.getOrElse { JSONObject() }
@@ -77,6 +83,45 @@ object Wow {
         val streaming = client.optJSONObject("Streaming") ?: JSONObject().also { client.put("Streaming", it) }
         streaming.put("StreamingEnabled", "false")
         file.writeText(json.toString(2))
+    }
+
+    // ---- Trusted root certificates ----------------------------------------------------------
+
+    private const val USER_ROOT_KEY = "Software\\\\Microsoft\\\\SystemCertificates\\\\Root\\\\Certificates\\\\"
+
+    /**
+     * Battle.net's Agent only talks to a Battle.net.exe whose Authenticode signature verifies. Wine looks
+     * for trusted roots in Linux paths (/etc/ssl/certs, ...) that don't exist on Android, so every check
+     * fails and the Agent shuts down ("Failed Caller authorization due to signature").
+     *
+     * Fix: copy Android's own trusted CAs into the Windows *current user* Root store (user.reg). Wine's
+     * chain engine trusts HKCU Root + HKLM Root, and its host-sync only ever rewrites HKLM, so these stay.
+     * Returns how many certificates were added (0 when already present).
+     */
+    fun installRootCertificates(container: Container): Int {
+        val userReg = File(container.getRootDir(), ".wine/user.reg")
+        if (!userReg.isFile) return 0
+        val existing = userReg.readText()
+        val store = KeyStore.getInstance("AndroidCAStore").apply { load(null) }
+        val sha1 = MessageDigest.getInstance("SHA-1")
+        val now = System.currentTimeMillis() / 1000
+        val out = StringBuilder()
+        var added = 0
+        for (alias in store.aliases()) {
+            val cert = store.getCertificate(alias) as? X509Certificate ?: continue
+            val der = cert.encoded
+            val hash = sha1.digest(der).joinToString("") { "%02X".format(it) }
+            val key = USER_ROOT_KEY + hash
+            if (existing.contains("[$key]", ignoreCase = true)) continue
+            // Wine serialized-cert blob: { propId = CERT_CERT_PROP_ID (32), 1, length } + DER.
+            val blob = ByteBuffer.allocate(12 + der.size).order(ByteOrder.LITTLE_ENDIAN)
+                .putInt(32).putInt(1).putInt(der.size).put(der).array()
+            out.append("\n[").append(key).append("] ").append(now).append('\n')
+            out.append("\"Blob\"=hex:").append(blob.joinToString(",") { "%02x".format(it) }).append('\n')
+            added++
+        }
+        if (added > 0) userReg.appendText(out.toString())
+        return added
     }
 
     // ---- Game detection ---------------------------------------------------------------------

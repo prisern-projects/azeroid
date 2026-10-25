@@ -2,6 +2,14 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.1.6] - 2026-10-25
+
+- **Fix for the Battle.net sign-in loop.** Battle.net's Agent logged "Failed Caller authorization due to
+  signature" and shut down every ~15 s. Wine couldn't verify Blizzard's code signature because it found no trusted
+  root certificates on Android. Azeroid now copies Android's trusted root certificates into the Windows
+  certificate store before Battle.net starts.
+- Share log reports which certificate stores Wine sees.
+
 ## [0.1.5] - 2026-10-25
 
 - New: *Advanced → Battle.net translator* (Box64 / FEX safe / FEX fast). Battle.net and its Agent are

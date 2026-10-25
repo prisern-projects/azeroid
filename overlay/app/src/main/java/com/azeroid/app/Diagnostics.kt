@@ -56,6 +56,18 @@ object Diagnostics {
             .ifEmpty { "(no Battle.net logs found)" }
     }.getOrElse { "(Battle.net logs unavailable: ${it.message})" }
 
+    /** Which trusted-root sources Wine can see; Battle.net's signature checks depend on them. */
+    private fun certificateReport(context: Context): String = runCatching {
+        val c = Engine.findContainer(context) ?: return "(no WoW environment yet)"
+        val marker = "Software\\\\Microsoft\\\\SystemCertificates\\\\Root\\\\Certificates\\\\"
+        fun count(name: String) = File(c.getRootDir(), ".wine/$name").takeIf { it.isFile }
+            ?.useLines { lines -> lines.count { it.startsWith("[$marker", ignoreCase = true) } } ?: -1
+        val androidDir = File("/etc/security/cacerts")
+        "HKLM Root certs (Wine host import): ${count("system.reg")}\n" +
+            "HKCU Root certs (Azeroid): ${count("user.reg")}\n" +
+            "/etc/security/cacerts readable: ${androidDir.canRead()} files=${androidDir.list()?.size ?: -1}\n"
+    }.getOrElse { "(certificate report failed: ${it.message})" }
+
     /** Writes one report file to Azeroid/logs on the phone's storage and opens the share sheet for it. */
     fun shareLogs(context: Context) {
         val stamp = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US).format(Date())
@@ -63,6 +75,7 @@ object Diagnostics {
         val report = File(dir, "azeroid-log-$stamp.txt")
         report.writeText(
             deviceSummary(context) +
+                "\n===== certificates =====\n" + certificateReport(context) +
                 "\n===== Battle.net logs =====\n" + battleNetLogs(context) +
                 "\n===== engine sessions =====\n" + engineLogs(context) +
                 "\n===== app log =====\n" + recentLog()
