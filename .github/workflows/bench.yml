@@ -34,22 +34,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Hangover (Wine ARM64EC + FEX)
+      - name: Install Wine (GE-Proton 10 source build) + Azeroid's FEX
         run: |
           set -e
           sudo apt-get update -q
-          sudo apt-get install -yq xvfb imagemagick cabextract xdotool mesa-vulkan-drivers libvulkan1 libegl1 libgl1 libgles2
-          gh release list -R AndreRH/hangover -L 5
-          # Wine 10 line, like the phone's GE-Proton 10 (Wine 11 can't render Battle.net's browser at all).
-          tag="${HANGOVER_TAG:-hangover-10.18}"
-          echo "hangover $tag"
-          mkdir -p "$RUNNER_TEMP/hangover" && cd "$RUNNER_TEMP/hangover"
-          gh release view "$tag" -R AndreRH/hangover --json assets -q '.assets[].name'
-          gh release download "$tag" -R AndreRH/hangover -p '*24.04*arm64*' || gh release download "$tag" -R AndreRH/hangover -p '*noble*'
-          ls -la
-          for f in *.tar *.tar.xz *.tgz; do [ -f "$f" ] && tar -xf "$f"; done
-          sudo apt-get install -yq ./*.deb $(find . -name '*.deb' -not -path './*.deb')
-          wine --version
+          sudo apt-get install -yq xvfb imagemagick cabextract xdotool mesa-vulkan-drivers libvulkan1 libegl1 libgl1 libgles2 \
+            libfreetype6 libfontconfig1 libgnutls30t64 libxrender1 libxrandr2 libxi6 libxcursor1 libxcomposite1 libxinerama1 libxxf86vm1 libpulse0 libasound2t64 libunwind8
+          gh release download bench-wine-ge10 -p 'wine-ge10-linux-arm64.tar.xz' -D "$RUNNER_TEMP"
+          sudo tar -xJf "$RUNNER_TEMP/wine-ge10-linux-arm64.tar.xz" -C /
+          gh release download native-fex-2601-116 -p 'fexcore-2601-116.wcp' -D "$RUNNER_TEMP"
+          mkdir -p "$RUNNER_TEMP/fex" && tar -xJf "$RUNNER_TEMP/fexcore-2601-116.wcp" -C "$RUNNER_TEMP/fex"
+          sudo cp "$RUNNER_TEMP"/fex/system32/lib*fex.dll /opt/wine/lib/wine/aarch64-windows/
+          echo "/opt/wine/bin" >> "$GITHUB_PATH"
+          /opt/wine/bin/wine --version
 
       - name: Run bench
         timeout-minutes: 40
