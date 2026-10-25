@@ -2,6 +2,13 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.1.14] - 2026-10-25
+
+- Battle.net crashed under FEX 2610 (stack overflow inside FEX itself). Azeroid now builds FEX at revision
+  1268a39 in its own CI. That revision is known to run Battle.net on GE-Proton 10.0-34. The runtime step installs it.
+- Note: when Blizzard's installer finishes, it opens Battle.net by itself without Azeroid's settings.
+  Exit that window and use **Open Battle.net** in Azeroid.
+
 ## [0.1.13] - 2026-10-25
 
 - **New default runtime: GE-Proton 10.0-34 ARM64EC** ([The412Banner/proton-wine](https://github.com/The412Banner/proton-wine),

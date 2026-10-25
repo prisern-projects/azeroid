@@ -44,13 +44,13 @@ object Engine {
     private val offeredRuntimes = com.azeroid.app.Runtime.entries.map { it.id }.toSet()
 
     /**
-     * x86 translator. The bundled FEX 2601 overflows Battle.net.exe's stack; 2610 is installed as an engine
-     * content package (Windows DLLs + Unix-side libs), pinned to an exact commit and SHA-256.
+     * x86 translator: FEX at 1268a39 ("2601-116"), built by Azeroid's CI. FEX 2610 overflows its own stack in
+     * Battle.net.exe; this revision is the one known to run Battle.net on GE-Proton 10.0-34.
      */
-    const val FEX_VERSION = "2610"
+    const val FEX_VERSION = "2601-116"
     private const val FEX_URL =
-        "https://raw.githubusercontent.com/StevenMXZ/Winlator-Contents/118607e86d60d24be885dc58d5cab74c84c5d8eb/FEXCore/2610.wcp"
-    private const val FEX_SHA256 = "b3cff7e7a13d6d38a977ed569262ef2187b03da442dfb281179930545150fd61"
+        "https://github.com/prisern-projects/azeroid/releases/download/native-fex-2601-116/fexcore-2601-116.wcp"
+    private const val FEX_SHA256 = "bc5335e407f78a96c2b8304a26eeb5c4200ce5d4c2b708cdf00c70e6025ef05d"
 
     /** Engine profile id of the bundled "Virtual Gamepad" on-screen layout (XInput buttons + sticks). */
     const val VIRTUAL_GAMEPAD_PROFILE_ID = 3
