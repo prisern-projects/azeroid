@@ -155,7 +155,7 @@ private fun copyFor(step: Step): StepCopy = when (step) {
         "Unpacks Wine, the x86 translator and the Vulkan drivers. Takes about a minute and only happens once.",
         "Install engine")
     Step.RUNTIME -> StepCopy(3, "Download the Windows runtime",
-        "Proton 10 (about 130 MB), the Windows layer Battle.net needs. One-time download.",
+        "Proton (about 130 MB), the Windows layer Battle.net needs. One-time download.",
         "Download")
     Step.CONTAINER -> StepCopy(4, "Create the WoW environment",
         "Sets up a Windows environment tuned for World of Warcraft on Snapdragon.",
@@ -282,6 +282,9 @@ private fun AdvancedDialog(activity: AzeroidActivity, onClose: () -> Unit) {
 
                 Label("x86 emulation — Fast is quicker but may crash")
                 Choices(EmulationMode.entries, prefs.emulation, { it.label }) { prefs.emulation = it; activity.settingsChanged() }
+
+                Label("Windows runtime — switching sets up a separate environment (Battle.net installs again)")
+                Choices(com.azeroid.app.Runtime.entries, prefs.runtime, { it.label }) { prefs.runtime = it; activity.settingsChanged() }
 
                 Label("Battle.net translator — if Battle.net loops or freezes, try another one")
                 Choices(BattleNetTranslator.entries, prefs.bnetTranslator, { it.label }) { prefs.bnetTranslator = it; activity.settingsChanged() }

@@ -39,6 +39,12 @@ enum class BattleNetTranslator(val label: String, val emulator: String, val fexP
     BOX64("Box64", "Box64", "COMPATIBILITY", "COMPATIBILITY"),
 }
 
+/** Wine runtime of the WoW environment; each one gets its own environment. */
+enum class Runtime(val label: String, val id: String) {
+    PROTON_10("Proton 10", "proton-10.0-5-arm64ec"),
+    PROTON_11("Proton 11", "proton-11.0-1-arm64ec"),
+}
+
 enum class LaunchMode(val label: String) {
     BATTLE_NET("Through Battle.net"),
     DIRECT("Start WoW directly"),
@@ -72,6 +78,10 @@ class AzeroidPrefs(context: Context) {
         // Key renamed in 0.1.8 so everyone moves to the new default (Box64 breaks the sign-in page's TLS).
         get() = enumOr(sp.getString("bnetTranslator2", null), BattleNetTranslator.FEX_SAFE)
         set(v) = sp.edit().putString("bnetTranslator2", v.name).apply()
+
+    var runtime: Runtime
+        get() = enumOr(sp.getString("runtime", null), Runtime.PROTON_10)
+        set(v) = sp.edit().putString("runtime", v.name).apply()
 
     var showFps: Boolean
         get() = sp.getBoolean("fps", false)

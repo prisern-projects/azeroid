@@ -2,6 +2,12 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.1.11] - 2026-10-25
+
+- New: *Advanced → Windows runtime*: Proton 10 or Proton 11 (each pinned + SHA-256 checked).
+  On Proton 10, Battle.net's main thread freezes right after it opens the login page, so the window stays blank.
+  Each runtime gets its own environment, so switching means installing Battle.net once more.
+
 ## [0.1.10] - 2026-10-25
 
 - Battle.net's blank window: FEX 2610 still overflowed its own native stack while translating Battle.net

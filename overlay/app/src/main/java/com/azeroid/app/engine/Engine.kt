@@ -5,6 +5,7 @@ import android.content.Intent
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.PreferenceManager
+import com.azeroid.app.AzeroidPrefs
 import com.winlator.cmod.OnboardingActivity
 import com.winlator.cmod.XServerDisplayActivity
 import com.winlator.cmod.container.Container
@@ -36,10 +37,11 @@ object Engine {
     const val CONTAINER_NAME = "Azeroid"
 
     /**
-     * Wine runtime for the WoW environment. Proton 9 can't run current Battle.net: its Agent rejects the
-     * client ("Failed Caller authorization due to signature"); Wine/Proton 10+ is fine.
+     * Wine runtime for the WoW environment (user-selectable). Proton 9 can't run current Battle.net: its Agent
+     * rejects the client ("Failed Caller authorization due to signature"); Wine/Proton 10+ is fine.
      */
-    const val RUNTIME = "proton-10.0-5-arm64ec"
+    fun runtime(context: Context): String = AzeroidPrefs(context).runtime.id
+    private val offeredRuntimes = com.azeroid.app.Runtime.entries.map { it.id }.toSet()
 
     /**
      * x86 translator. The bundled FEX 2601 overflows Battle.net.exe's stack; 2610 is installed as an engine
@@ -69,7 +71,7 @@ object Engine {
     }
 
     fun isRuntimeInstalled(context: Context): Boolean =
-        ProtonPackageManager.isInstalled(context, RUNTIME) && isFexInstalled(context)
+        ProtonPackageManager.isInstalled(context, runtime(context)) && isFexInstalled(context)
 
     private fun isFexInstalled(context: Context): Boolean {
         val contents = ContentsManager(context).apply { syncContents() }
@@ -126,25 +128,28 @@ object Engine {
         }
     }
 
-    /** Blocking. Downloads (SHA-256 checked by the engine) and installs [RUNTIME]. */
+    /** Blocking. Downloads (SHA-256 checked by the engine) and installs the selected runtime. */
     fun installRuntime(context: Context, progress: (Int) -> Unit): Boolean {
-        val pkg = ProtonPackageManager.getPackage(RUNTIME) ?: return false
+        val id = runtime(context)
+        val pkg = ProtonPackageManager.getPackage(id) ?: return false
         val archive = File(context.cacheDir, pkg.fileName)
         try {
             if (!ProtonPackageManager.downloadPackage(pkg, archive) { p -> progress(p) }) return false
-            return ProtonPackageManager.installPackage(context, RUNTIME, archive)
+            return ProtonPackageManager.installPackage(context, id, archive)
         } finally {
             archive.delete()
         }
     }
 
-    /** The WoW environment on the current runtime. */
-    fun findContainer(context: Context): Container? =
-        ContainerManager(context).containers.firstOrNull { it.getName() == CONTAINER_NAME && it.getWineVersion() == RUNTIME }
+    /** The WoW environment on the selected runtime. */
+    fun findContainer(context: Context): Container? {
+        val id = runtime(context)
+        return ContainerManager(context).containers.firstOrNull { it.getName() == CONTAINER_NAME && it.getWineVersion() == id }
+    }
 
-    /** An Azeroid environment from an older release, on an older runtime. */
+    /** An Azeroid environment from an older release, on a runtime Azeroid no longer offers (Proton 9). */
     fun findLegacyContainer(context: Context): Container? =
-        ContainerManager(context).containers.firstOrNull { it.getName() == CONTAINER_NAME && it.getWineVersion() != RUNTIME }
+        ContainerManager(context).containers.firstOrNull { it.getName() == CONTAINER_NAME && it.getWineVersion() !in offeredRuntimes }
 
     /** Blocking. Deletes a container and everything in it. */
     fun deleteContainer(context: Context, container: Container) {
@@ -175,7 +180,7 @@ object Engine {
             put("box64Preset", "COMPATIBILITY")
             put("fexcoreVersion", DefaultVersion.FEXCORE)
             put("fexcorePreset", "INTERMEDIATE")
-            put("wineVersion", RUNTIME)
+            put("wineVersion", runtime(context))
         }
         OpenGLDriverDefaults.initialize(context, data)
 

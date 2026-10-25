@@ -148,9 +148,9 @@ class AzeroidActivity : AppCompatActivity() {
     }
 
     private fun installRuntime() {
-        busy("Downloading the Windows runtime (Proton 10, 130 MB)…", 0f)
+        busy("Downloading the Windows runtime (${prefs.runtime.label}, ~130 MB)…", 0f)
         background({
-            if (!com.winlator.cmod.core.ProtonPackageManager.isInstalled(this, Engine.RUNTIME)) {
+            if (!com.winlator.cmod.core.ProtonPackageManager.isInstalled(this, Engine.runtime(this))) {
                 check(Engine.installRuntime(this) { p -> runOnUiThread { state = state.copy(progress = p / 100f) } }) {
                     "Runtime download failed. Check your connection and try again."
                 }
