@@ -110,6 +110,7 @@ object Engine {
         val onScreenController: Boolean,
         val fexPreset: String,
         val gpuDriverVersion: String?,
+        val extraEnv: Map<String, String> = emptyMap(),
     )
 
     fun launch(context: Context, container: Container, spec: LaunchSpec) {
@@ -120,6 +121,8 @@ object Engine {
         PreferenceManager.getDefaultSharedPreferences(context).edit()
             .putBoolean("show_touchscreen_controls_enabled", spec.onScreenController)
             .putInt("selected_profile_index", -1)
+            // Wine/FEX output + crash traces go to Winlator/logs, which "Share log" collects.
+            .putBoolean("enable_winlator_logs", true)
             .apply()
 
         val intent = Intent(context, XServerDisplayActivity::class.java)
@@ -172,12 +175,15 @@ object Engine {
         return file
     }
 
-    private fun launchEnv(spec: LaunchSpec): String = listOf(
-        "DXVK_HUD=" + if (spec.showFps) "fps" else "0",
-        "DXVK_ASYNC=1",
-        "DXVK_GPLASYNCCACHE=1",
-        "WINEESYNC=1",
-    ).joinToString(" ")
+    private fun launchEnv(spec: LaunchSpec): String = (linkedMapOf(
+        "DXVK_HUD" to if (spec.showFps) "fps" else "0",
+        "DXVK_ASYNC" to "1",
+        "DXVK_GPLASYNCCACHE" to "1",
+        "WINEESYNC" to "1",
+    ) + spec.extraEnv).entries.joinToString(" ") { "${it.key}=${it.value}" }
+
+    /** Folder the engine writes its session logs to (Winlator/logs on shared storage). */
+    fun logDir(context: Context): File = com.winlator.cmod.widget.LogView.getWinlatorLogFile(context).parentFile!!
 
     private fun dxvkConfig(base: String, fpsCap: Int): String {
         val config = KeyValueSet(base)

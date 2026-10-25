@@ -8,6 +8,9 @@ Please include what you pressed and what you saw.
 2. *Advanced → GPU driver*: try **Samsung/Qualcomm** first, then **Turnip**, then **Qualcomm v863**.
 3. *Graphics → Performance*, then try again.
 
+## How do I type (log in) without a keyboard?
+Swipe **Back** once while Battle.net or the game is showing → side menu → **Show Keyboard**.
+
 ## Battle.net is a white/black window or crashes
 - Azeroid turns Battle.net's hardware acceleration off automatically. Close it and open it again once.
 - If it never draws: *Advanced → Play button → Start WoW directly* and log in from the game's own login screen.

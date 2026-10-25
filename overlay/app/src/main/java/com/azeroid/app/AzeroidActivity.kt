@@ -160,14 +160,14 @@ class AzeroidActivity : AppCompatActivity() {
             Wow.downloadInstaller(c) { p -> runOnUiThread { state = state.copy(progress = p) } }
             Wow.tuneBattleNet(c)
         }) {
-            launch(c, "Battle.net Setup", Wow.installerWindowsPath())
+            launch(c, "Battle.net Setup", Wow.installerWindowsPath(), battleNet = true)
         }
     }
 
     fun openBattleNet() {
         val c = container ?: return refresh()
         background({ Wow.tuneBattleNet(c) }) {
-            launch(c, "Battle.net", Wow.BATTLE_NET_EXE)
+            launch(c, "Battle.net", Wow.BATTLE_NET_EXE, battleNet = true)
         }
     }
 
@@ -184,13 +184,17 @@ class AzeroidActivity : AppCompatActivity() {
             Wow.tuneBattleNet(c)
         }) {
             when (prefs.launchMode) {
-                LaunchMode.BATTLE_NET -> launch(c, "World of Warcraft", Wow.BATTLE_NET_EXE)
+                LaunchMode.BATTLE_NET -> launch(c, "World of Warcraft", Wow.BATTLE_NET_EXE, battleNet = true)
                 LaunchMode.DIRECT -> launch(c, "World of Warcraft", install.windowsExe)
             }
         }
     }
 
-    private fun launch(c: Container, title: String, windowsExe: String) {
+    /**
+     * [battleNet] = the session starts in Battle.net (or its installer). That's a multi-process Chromium app,
+     * which needs full x86 memory-ordering emulation and no Windows location API to stay up under Wine.
+     */
+    private fun launch(c: Container, title: String, windowsExe: String, battleNet: Boolean = false) {
         val overlay = when (prefs.overlay) {
             ControllerOverlay.AUTO -> !hasGamepad()
             ControllerOverlay.ON -> true
@@ -203,9 +207,11 @@ class AzeroidActivity : AppCompatActivity() {
             fpsCap = prefs.fpsCap,
             showFps = prefs.showFps,
             onScreenController = overlay,
-            fexPreset = prefs.emulation.fexPreset,
+            fexPreset = if (battleNet) EmulationMode.STABLE.fexPreset else prefs.emulation.fexPreset,
             gpuDriverVersion = prefs.gpuDriver.engineVersion,
+            extraEnv = if (battleNet) mapOf("WINEDLLOVERRIDES" to "locationapi=d") else emptyMap(),
         ))
+        if (battleNet) toast("Tip: to type, swipe Back once → Show Keyboard")
     }
 
     fun openEngineTools() = Engine.openEngineTools(this)

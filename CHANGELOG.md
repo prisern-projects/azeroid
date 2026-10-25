@@ -2,6 +2,15 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.1.1] - 2026-10-25
+
+- Battle.net stability: Battle.net (and its installer) now always run with full x86 memory-ordering
+  emulation, and with Windows' location API disabled. That API is a known cause of Battle.net crashing or hanging at sign-in under Wine.
+- "Stable" emulation mode is now safer (full memory ordering); "Fast" is the previous default.
+- Keyboard hint: to type, swipe Back once → Show Keyboard (shown on screen when Battle.net starts).
+- Share log now saves a full report (including the engine's Wine/FEX logs and crash traces) to
+  `Azeroid/logs` on your phone and shares it as a file.
+
 ## [0.1.0] - 2026-10-25
 
 First release.

@@ -23,8 +23,8 @@ enum class GpuDriver(val label: String, val engineVersion: String?) {
 }
 
 enum class EmulationMode(val label: String, val fexPreset: String) {
-    STABLE("Stable", "INTERMEDIATE"),
-    FAST("Fast", "PERFORMANCE"),
+    STABLE("Stable", "COMPATIBILITY"),
+    FAST("Fast", "INTERMEDIATE"),
 }
 
 enum class LaunchMode(val label: String) {

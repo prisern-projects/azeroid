@@ -4,6 +4,13 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import android.os.Environment
+import androidx.core.content.FileProvider
+import com.azeroid.app.engine.Engine
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import com.azeroid.app.update.Updater
 import com.winlator.cmod.BuildConfig
 import java.net.URLEncoder
@@ -23,15 +30,37 @@ object Diagnostics {
     private fun recentLog(): String = runCatching {
         val p = ProcessBuilder("logcat", "-d", "-t", "4000", "-v", "time").redirectErrorStream(true).start()
         p.inputStream.bufferedReader().readText()
-    }.getOrElse { "(log unavailable: ${it.message})" }.takeLast(200_000)
+    }.getOrElse { "(log unavailable: ${it.message})" }.takeLast(300_000)
 
+    /** The engine's own session logs (Wine/FEX output, crash traces), newest first. */
+    private fun engineLogs(context: Context): String = runCatching {
+        Engine.logDir(context).listFiles { f -> f.name.endsWith(".txt") }
+            ?.sortedByDescending { it.lastModified() }
+            ?.take(3)
+            ?.joinToString("\n") { f -> "----- ${f.name} -----\n" + f.readText().takeLast(400_000) }
+            ?: "(no engine logs yet)"
+    }.getOrElse { "(engine logs unavailable: ${it.message})" }
+
+    /** Writes one report file to Azeroid/logs on the phone's storage and opens the share sheet for it. */
     fun shareLogs(context: Context) {
-        val text = deviceSummary(context) + "\n----- log -----\n" + recentLog()
+        val stamp = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US).format(Date())
+        val dir = File(Environment.getExternalStorageDirectory(), "Azeroid/logs").apply { mkdirs() }
+        val report = File(dir, "azeroid-log-$stamp.txt")
+        report.writeText(
+            deviceSummary(context) +
+                "\n===== engine sessions =====\n" + engineLogs(context) +
+                "\n===== app log =====\n" + recentLog()
+        )
+        val uri = FileProvider.getUriForFile(context, context.packageName + ".tileprovider", report)
         val send = Intent(Intent.ACTION_SEND)
             .setType("text/plain")
             .putExtra(Intent.EXTRA_SUBJECT, "Azeroid log")
-            .putExtra(Intent.EXTRA_TEXT, text)
-        context.startActivity(Intent.createChooser(send, "Share Azeroid log").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            .putExtra(Intent.EXTRA_STREAM, uri)
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        context.startActivity(
+            Intent.createChooser(send, "Share Azeroid log (also saved in Azeroid/logs)")
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        )
     }
 
     fun reportBug(context: Context) {

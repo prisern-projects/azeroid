@@ -157,10 +157,10 @@ private fun copyFor(step: Step): StepCopy = when (step) {
         "Sets up a Windows environment tuned for World of Warcraft on Snapdragon.",
         "Create")
     Step.BATTLE_NET -> StepCopy(4, "Install Battle.net",
-        "Downloads Blizzard's official installer and runs it. Click through the installer, then close it to come back here.",
+        "Downloads Blizzard's official installer and runs it. If it closes before finishing, just tap the button again — it continues where it stopped.",
         "Download & install")
     Step.WOW -> StepCopy(5, "Install WoW Classic",
-        "Log in to Battle.net, pick World of Warcraft → Classic version, and install it. Keep the screen on — it's a big download. Return here when it's done.",
+        "Log in to Battle.net, pick World of Warcraft → Classic version, and install it. To type, swipe Back once → Show Keyboard. Keep the screen on — it's a big download.",
         "Open Battle.net")
     Step.READY -> StepCopy(0, "Ready", "", "PLAY")
 }
