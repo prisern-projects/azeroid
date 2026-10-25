@@ -1,0 +1,112 @@
+name: Build
+
+# Every push/PR builds an APK (downloadable from the run's artifacts).
+# Pushing a tag like v0.2.0 additionally signs it with the release key and
+# publishes a GitHub Release — which is what the app's updater picks up.
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      AZEROID_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Version
+        id: version
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            v="${GITHUB_REF#refs/tags/v}"
+            [[ "$v" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "Tag must look like v1.2.3"; exit 1; }
+            echo "release=true" >> "$GITHUB_OUTPUT"
+          else
+            v="0.0.0"   # dev builds never trigger the in-app updater
+            echo "release=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+          echo "AZEROID_VERSION=$v" >> "$GITHUB_ENV"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Native build tools
+        run: sudo apt-get update -q && sudo apt-get install -yq glslang-tools ninja-build zstd
+
+      - name: Cache downloads
+        uses: actions/cache@v4
+        with:
+          path: build/cache
+          key: downloads-${{ hashFiles('engine.properties') }}
+
+      - name: Prepare engine + Azeroid overlay
+        run: ./scripts/prepare-engine.sh
+
+      - name: Release signing key
+        if: steps.version.outputs.release == 'true'
+        env:
+          KEYSTORE_B64: ${{ secrets.AZEROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.AZEROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.AZEROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.AZEROID_KEY_PASSWORD }}
+        run: |
+          [ -n "$KEYSTORE_B64" ] || { echo "::error::AZEROID_KEYSTORE_BASE64 secret missing — see docs/RELEASING.md"; exit 1; }
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/azeroid.jks"
+          {
+            echo "AZEROID_KEYSTORE_FILE=$RUNNER_TEMP/azeroid.jks"
+            echo "AZEROID_KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD"
+            echo "AZEROID_KEY_ALIAS=$KEY_ALIAS"
+            echo "AZEROID_KEY_PASSWORD=$KEY_PASSWORD"
+          } >> "$GITHUB_ENV"
+
+      - name: Build APK
+        working-directory: engine
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-configuration-cache --stacktrace
+
+      - name: Collect APK
+        run: |
+          apk="$(find engine/app/build/outputs/apk/release -name '*.apk' | head -1)"
+          test -n "$apk"
+          mkdir -p dist
+          cp "$apk" "dist/Azeroid-${{ steps.version.outputs.version }}.apk"
+          sha256sum dist/*.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Azeroid-${{ steps.version.outputs.version }}-${{ github.run_number }}
+          path: dist/*.apk
+          if-no-files-found: error
+
+      - name: Publish GitHub Release
+        if: steps.version.outputs.release == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          # Release notes = this version's section of CHANGELOG.md
+          awk -v v="$VERSION" '
+            $0 ~ "^## \\[" v "\\]" {on=1; next}
+            on && /^## \[/ {exit}
+            on {print}
+          ' CHANGELOG.md > notes.md
+          [ -s notes.md ] || echo "Azeroid $VERSION" > notes.md
+          gh release create "v$VERSION" dist/*.apk --title "Azeroid $VERSION" --notes-file notes.md
