@@ -84,11 +84,10 @@ jobs:
       - name: Surface build errors
         if: failure()
         run: |
-          # One annotation per compiler/Gradle error, so failures are readable from the checks API.
-          grep -E '^e: |error:|\* What went wrong|FAILED|Exception' build.log | head -40 | while IFS= read -r line; do
-            echo "::error::${line:0:900}"
-          done
-          tail -60 build.log
+          # Errors as multi-line annotations, so failures are readable from the checks API.
+          annotate() { python3 -c 'import sys; t=sys.stdin.read()[-30000:]; print("::error title=%s::" % sys.argv[1] + t.replace("%","%25").replace("\r","").replace("\n","%0A"))' "$1"; }
+          grep -E -A3 '^e: |error:|ERROR:|\* What went wrong|Exception:' build.log | head -150 | annotate "errors" || true
+          tail -80 build.log | annotate "log tail" || true
 
       - name: Collect APK
         run: |
