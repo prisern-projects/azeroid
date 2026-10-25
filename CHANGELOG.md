@@ -2,6 +2,12 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.1.10] - 2026-10-25
+
+- Battle.net's blank window: FEX 2610 still overflowed its own native stack while translating Battle.net
+  (multiblock compilation). "FEX safe", the default, now uses FEX's STABILITY preset with multiblock off.
+  If it still stays blank, try *Advanced → Battle.net translator → Box64*.
+
 ## [0.1.9] - 2026-10-25
 
 - Proton 10 fixed the sign-in loop: Battle.net's Agent now accepts the client.

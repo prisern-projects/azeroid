@@ -32,8 +32,10 @@ enum class EmulationMode(val label: String, val fexPreset: String) {
  * Battle.net is picky under emulation, so this is separate from the game's setting.
  */
 enum class BattleNetTranslator(val label: String, val emulator: String, val fexPreset: String, val box64Preset: String) {
-    FEX_SAFE("FEX safe", "FEXCore", "COMPATIBILITY", "COMPATIBILITY"),
-    FEX_FAST("FEX fast", "FEXCore", "INTERMEDIATE", "COMPATIBILITY"),
+    // STABILITY = FEX_MULTIBLOCK=0: with multiblock, FEX's compiler overflows the 1 MB native stack Wine gives
+    // 32-bit threads while translating Battle.net's Chromium code ("virtual_setup_exception stack overflow").
+    FEX_SAFE("FEX safe", "FEXCore", "STABILITY", "COMPATIBILITY"),
+    FEX_FAST("FEX fast", "FEXCore", "COMPATIBILITY", "COMPATIBILITY"),
     BOX64("Box64", "Box64", "COMPATIBILITY", "COMPATIBILITY"),
 }
 
