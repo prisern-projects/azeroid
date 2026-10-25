@@ -80,11 +80,11 @@ jobs:
       - name: Versions
         run: cat native/versions.properties | grep -v '^#' >> "$GITHUB_ENV"
 
-      - name: Toolchain (llvm-mingw ${{ env.LLVM_MINGW }})
+      - name: Toolchain (bylaws llvm-mingw ${{ env.BYLAWS_LLVM_MINGW }})
         run: |
           sudo apt-get update -q && sudo apt-get install -yq ninja-build cmake
-          f="llvm-mingw-${LLVM_MINGW}-ucrt-ubuntu-22.04-x86_64.tar.xz"
-          curl -fsSL "https://github.com/mstorsjo/llvm-mingw/releases/download/${LLVM_MINGW}/$f" -o "$RUNNER_TEMP/$f"
+          f="llvm-mingw-${BYLAWS_LLVM_MINGW}-ucrt-ubuntu-22.04-x86_64.tar.xz"
+          curl -fsSL "https://github.com/bylaws/llvm-mingw/releases/download/${BYLAWS_LLVM_MINGW}/$f" -o "$RUNNER_TEMP/$f"
           tar -xf "$RUNNER_TEMP/$f" -C "$RUNNER_TEMP"
           echo "$RUNNER_TEMP/${f%.tar.xz}/bin" >> "$GITHUB_PATH"
 
@@ -147,4 +147,4 @@ jobs:
           gh release view "$tag" >/dev/null 2>&1 && gh release delete "$tag" --yes --cleanup-tag
           gh release create "$tag" fexcore-*.wcp* --prerelease --target "$GITHUB_SHA" \
             --title "FEX ${FEX_NAME} (${FEX_REF:0:7}) Wine bridges" \
-            --notes "FEX-Emu at ${FEX_REF}, built for Wine ARM64EC/WoW64 with llvm-mingw ${LLVM_MINGW}. Unmodified."
+            --notes "FEX-Emu at ${FEX_REF}, built for Wine ARM64EC/WoW64 with bylaws llvm-mingw ${BYLAWS_LLVM_MINGW}. Unmodified."
