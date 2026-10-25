@@ -2,6 +2,12 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.1.3] - 2026-10-25
+
+- **Fixed the Battle.net crash** ("closes back to Azeroid" while the login window loads). A race condition
+  in the engine's X server shared-memory code crashed the app whenever Battle.net's window updated quickly.
+  This was also the likely cause of the earlier D-pad crash.
+
 ## [0.1.2] - 2026-10-25
 
 - Battle.net is now operated by touch: a tap clicks exactly where your finger is (email box, buttons, …).

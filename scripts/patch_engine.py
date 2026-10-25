@@ -65,6 +65,21 @@ azeroid_components = """
 """
 edit(manifest, r'(<application\b[^>]*>)', r"\1" + azeroid_components.replace("\\", "\\\\"))
 
+# Engine bug fix: SysVSharedMemory.delete() mutated the segment table without the lock that
+# attach()/detach() hold. Under Battle.net's Chromium (lots of MIT-SHM churn) detach() then read
+# SparseArray's internal DELETED marker -> ClassCastException on the X server thread -> app crash.
+edit(engine / "app/src/main/java/com/winlator/cmod/sysvshm/SysVSharedMemory.java",
+     r"public void delete\(int shmid\) \{\s*SHMemory shmemory = shmemories\.get\(shmid\);\s*"
+     r"if \(shmemory != null\) \{(.*?)shmemories\.remove\(shmid\);\s*\}\s*\}",
+     r"public void delete(int shmid) {\n        synchronized (shmemories) {\n"
+     r"            SHMemory shmemory = shmemories.get(shmid);\n"
+     r"            if (shmemory != null) {\1shmemories.remove(shmid);\n            }\n        }\n    }")
+
+# Same class of race one level up: the X server thread and the renderer share this SparseArray.
+shm_mgr = engine / "app/src/main/java/com/winlator/cmod/xserver/SHMSegmentManager.java"
+for method in ("void attach(int xid, int shmid)", "void detach(int xid)", "ByteBuffer getData(int xid)"):
+    edit(shm_mgr, r"public " + re.escape(method), "public synchronized " + method)
+
 # Build config (applicationId, version, signing) lives in overlay/app/azeroid.gradle.
 build_gradle = engine / "app/build.gradle"
 build_gradle.write_text(build_gradle.read_text(encoding="utf-8") + "\napply from: 'azeroid.gradle'\n", encoding="utf-8")
