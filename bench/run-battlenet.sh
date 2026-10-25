@@ -24,7 +24,9 @@ BNET="$WINEPREFIX/drive_c/Program Files (x86)/Battle.net/Battle.net.exe"
 echo "== installer (HODLL=${SETUP_HODLL:-libwow64fex.dll})"
 HODLL="${SETUP_HODLL:-libwow64fex.dll}" wine "$HOME/setup.exe" --lang=enUS >"$OUT/setup.log" 2>&1 &
 note "installer started"
-for i in $(seq 1 90); do [ -f "$BNET" ] && break; sleep 10; [ $((i % 6)) -eq 0 ] && { shot "setup-$i"; note "installer waiting ${i}0s"; }; done
+for i in $(seq 1 90); do [ -f "$BNET" ] && break; sleep 10
+  # The installer waits on "Continue" (bottom right of its 720x450 window, centred at the top of the screen).
+  [ $((i % 3)) -eq 0 ] && xdotool mousemove 1168 469 click 1 2>/dev/null; [ $((i % 6)) -eq 0 ] && { shot "setup-$i"; note "installer waiting ${i}0s"; }; done
 note "installer: Battle.net.exe present=$([ -f "$BNET" ] && echo yes || echo no)"
 sleep 30; shot setup-done
 note "syswow64 kernel32 present=$([ -f "$WINEPREFIX/drive_c/windows/syswow64/kernel32.dll" ] && echo yes || echo no)"

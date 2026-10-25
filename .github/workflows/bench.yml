@@ -31,7 +31,7 @@ jobs:
         run: |
           set -e
           sudo apt-get update -q
-          sudo apt-get install -yq xvfb imagemagick cabextract
+          sudo apt-get install -yq xvfb imagemagick cabextract xdotool
           gh release list -R AndreRH/hangover -L 5
           tag=$(gh release list -R AndreRH/hangover -L 1 --exclude-pre-releases --json tagName -q '.[0].tagName')
           echo "hangover $tag"
