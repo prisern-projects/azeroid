@@ -30,7 +30,7 @@ jobs:
             libxfixes-dev libxinerama-dev libxxf86vm-dev libfreetype-dev libfontconfig-dev libgnutls28-dev \
             libvulkan-dev libgl-dev libegl-dev libdbus-1-dev libpulse-dev libasound2-dev libunwind-dev libkrb5-dev \
             libdrm-dev libgbm-dev libwayland-dev libxkbcommon-dev libudev-dev libusb-1.0-0-dev libpcap-dev libcups2-dev \
-            libosmesa6-dev libv4l-dev libsane-dev libcapi20-dev libpcsclite-dev libgphoto2-dev libssl-dev
+            libsdl2-dev libosmesa6-dev libv4l-dev libsane-dev libcapi20-dev libpcsclite-dev libgphoto2-dev libssl-dev
 
       - name: llvm-mingw (ARM64EC capable, aarch64 host)
         run: |
@@ -57,7 +57,7 @@ jobs:
           sudo apt-get install -yq autoconf automake >/dev/null
           ./autogen.sh 2>&1 | tail -5
           ./configure --prefix=/opt/wine --enable-archs=arm64ec,aarch64,i386 --with-mingw=clang \
-            --disable-tests --without-gstreamer --without-sdl --without-ffmpeg 2>&1 | tee "$GITHUB_WORKSPACE/wine.log" | tail -30
+            --disable-tests --without-gstreamer --without-ffmpeg 2>&1 | tee "$GITHUB_WORKSPACE/wine.log" | tail -30
           make -k -j"$(nproc)" >> "$GITHUB_WORKSPACE/wine.log" 2>&1; rc=$?
           grep -E "fatal error|error:" "$GITHUB_WORKSPACE/wine.log" | sort -u | head -40
           echo "make exit $rc"; test $rc -eq 0
