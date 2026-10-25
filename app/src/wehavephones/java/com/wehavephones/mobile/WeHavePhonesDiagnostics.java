@@ -121,6 +121,12 @@ public final class WeHavePhonesDiagnostics {
         builder.append("\n-- Last one-button launch --\n");
         builder.append(OneButtonLauncher.lastRunSummary(context));
 
+        builder.append("\n-- Last session end --\n");
+        builder.append(com.wehavephones.core.SessionEndRecorder.lastSummary(context)).append('\n');
+
+        builder.append("\n-- Android exit reasons --\n");
+        builder.append(com.wehavephones.core.SessionEndRecorder.androidExitReasons(context)).append('\n');
+
         builder.append("\n-- Processes (same uid) --\n");
         String processes = ProcessScanner.describeProcesses();
         builder.append(processes.isEmpty() ? "None" : processes).append('\n');

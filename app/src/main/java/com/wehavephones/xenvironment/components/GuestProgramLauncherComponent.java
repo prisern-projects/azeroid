@@ -15,6 +15,7 @@ import com.wehavephones.core.Callback;
 import com.wehavephones.core.DefaultVersion;
 import com.wehavephones.core.EnvVars;
 import com.wehavephones.core.ProcessHelper;
+import com.wehavephones.core.SessionEndRecorder;
 import com.wehavephones.core.SessionLogs;
 import com.wehavephones.core.TarCompressorUtils;
 import com.wehavephones.fexcore.FEXCorePreset;
@@ -462,6 +463,10 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
                 synchronized (lock) {
                     pid = -1;
                 }
+                if (wineLogCallback[0] != null) {
+                    wineLogCallback[0].call("azeroid: session ended " + SessionEndRecorder.describe(status));
+                }
+                SessionEndRecorder.record(environment.getContext(), status);
                 finalizeLogging.run();
                 Log.i(TAG, "Guest process terminated with status: " + status);
                 if (terminationCallback != null) terminationCallback.call(status);

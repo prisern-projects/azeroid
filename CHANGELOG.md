@@ -2,6 +2,12 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.2.1] - 2026-10-25
+
+- **Crash forensics for the WoW install crash.** When a session ends, Azeroid now writes how it ended to
+  `wine.log` and Diagnostics: exit status (memory kill vs crash), free RAM and swap at that moment, and
+  Android's own exit reasons. The next crash tells us the real cause instead of a guess.
+
 ## [0.2.0] - 2026-10-25
 
 - **New foundation.** Azeroid is now built on [WeHavePhones](https://github.com/ashmerra/wehavephones) (MIT) and
