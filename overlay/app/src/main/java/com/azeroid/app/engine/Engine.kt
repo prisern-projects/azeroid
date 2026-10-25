@@ -17,7 +17,14 @@ import com.winlator.cmod.core.OpenGLDriverDefaults
 import com.winlator.cmod.core.ProtonPackageManager
 import com.winlator.cmod.xenvironment.ImageFs
 import com.winlator.cmod.xenvironment.ImageFsInstaller
+import android.net.Uri
+import com.winlator.cmod.contents.ContentProfile
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import org.json.JSONObject
+import java.security.MessageDigest
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import java.io.File
 
 /**
@@ -33,6 +40,15 @@ object Engine {
      * client ("Failed Caller authorization due to signature"); Wine/Proton 10+ is fine.
      */
     const val RUNTIME = "proton-10.0-5-arm64ec"
+
+    /**
+     * x86 translator. The bundled FEX 2601 overflows Battle.net.exe's stack; 2610 is installed as an engine
+     * content package (Windows DLLs + Unix-side libs), pinned to an exact commit and SHA-256.
+     */
+    const val FEX_VERSION = "2610"
+    private const val FEX_URL =
+        "https://raw.githubusercontent.com/StevenMXZ/Winlator-Contents/118607e86d60d24be885dc58d5cab74c84c5d8eb/FEXCore/2610.wcp"
+    private const val FEX_SHA256 = "b3cff7e7a13d6d38a977ed569262ef2187b03da442dfb281179930545150fd61"
 
     /** Engine profile id of the bundled "Virtual Gamepad" on-screen layout (XInput buttons + sticks). */
     const val VIRTUAL_GAMEPAD_PROFILE_ID = 3
@@ -52,7 +68,63 @@ object Engine {
         })
     }
 
-    fun isRuntimeInstalled(context: Context): Boolean = ProtonPackageManager.isInstalled(context, RUNTIME)
+    fun isRuntimeInstalled(context: Context): Boolean =
+        ProtonPackageManager.isInstalled(context, RUNTIME) && isFexInstalled(context)
+
+    private fun isFexInstalled(context: Context): Boolean {
+        val contents = ContentsManager(context).apply { syncContents() }
+        return contents.getInstalledProfiles(ContentProfile.ContentType.CONTENT_TYPE_FEXCORE)
+            .any { it.verName == FEX_VERSION }
+    }
+
+    /** Blocking. Downloads, verifies and installs FEX [FEX_VERSION] through the engine's content installer. */
+    fun installFex(context: Context, progress: (Int) -> Unit): Boolean {
+        if (isFexInstalled(context)) return true
+        val file = File(context.cacheDir, "fexcore-$FEX_VERSION.wcp")
+        try {
+            val sha = MessageDigest.getInstance("SHA-256")
+            OkHttpClient().newCall(Request.Builder().url(FEX_URL).build()).execute().use { r ->
+                if (!r.isSuccessful) return false
+                val body = r.body ?: return false
+                val total = body.contentLength()
+                body.byteStream().use { input ->
+                    file.outputStream().use { out ->
+                        val buf = ByteArray(64 * 1024)
+                        var done = 0L
+                        while (true) {
+                            val n = input.read(buf)
+                            if (n < 0) break
+                            out.write(buf, 0, n); sha.update(buf, 0, n); done += n
+                            if (total > 0) progress((done * 100 / total).toInt())
+                        }
+                    }
+                }
+            }
+            if (sha.digest().joinToString("") { "%02x".format(it) } != FEX_SHA256) {
+                Log.e(TAG, "FEX package checksum mismatch")
+                return false
+            }
+            val contents = ContentsManager(context).apply { syncContents() }
+            var ok = false
+            val done = CountDownLatch(1)
+            val finish = object : ContentsManager.OnInstallFinishedCallback {
+                override fun onFailed(reason: ContentsManager.InstallFailedReason, e: Exception?) {
+                    ok = reason == ContentsManager.InstallFailedReason.ERROR_EXIST
+                    if (!ok) Log.e(TAG, "FEX install failed: $reason", e)
+                    done.countDown()
+                }
+                override fun onSucceed(profile: ContentProfile) { ok = true; done.countDown() }
+            }
+            contents.extraContentFile(Uri.fromFile(file), object : ContentsManager.OnInstallFinishedCallback {
+                override fun onFailed(reason: ContentsManager.InstallFailedReason, e: Exception?) = finish.onFailed(reason, e)
+                override fun onSucceed(profile: ContentProfile) = contents.finishInstallContent(profile, finish)
+            })
+            done.await(2, TimeUnit.MINUTES)
+            return ok && isFexInstalled(context)
+        } finally {
+            file.delete()
+        }
+    }
 
     /** Blocking. Downloads (SHA-256 checked by the engine) and installs [RUNTIME]. */
     fun installRuntime(context: Context, progress: (Int) -> Unit): Boolean {
@@ -136,6 +208,7 @@ object Engine {
         val showFps: Boolean,
         val onScreenController: Boolean,
         val fexPreset: String,
+        val fexVersion: String = FEX_VERSION,
         /** "FEXCore" or "Box64": which translator runs 32-bit programs. Null = container default (FEX). */
         val emulator32: String? = null,
         val box64Preset: String? = null,
@@ -186,6 +259,7 @@ object Engine {
             "screenSize" to spec.screenSize,
             "dxwrapperConfig" to dxvkConfig(container.getDXWrapperConfig(), spec.fpsCap),
             "fexcorePreset" to spec.fexPreset,
+            "fexcoreVersion" to spec.fexVersion,
             "envVars" to launchEnv(spec),
         )
         if (spec.args.isNotBlank()) extras["execArgs"] = spec.args

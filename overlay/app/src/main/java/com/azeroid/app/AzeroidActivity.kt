@@ -150,8 +150,14 @@ class AzeroidActivity : AppCompatActivity() {
     private fun installRuntime() {
         busy("Downloading the Windows runtime (Proton 10, 130 MB)…", 0f)
         background({
-            check(Engine.installRuntime(this) { p -> runOnUiThread { state = state.copy(progress = p / 100f) } }) {
-                "Runtime download failed. Check your connection and try again."
+            if (!com.winlator.cmod.core.ProtonPackageManager.isInstalled(this, Engine.RUNTIME)) {
+                check(Engine.installRuntime(this) { p -> runOnUiThread { state = state.copy(progress = p / 100f) } }) {
+                    "Runtime download failed. Check your connection and try again."
+                }
+            }
+            runOnUiThread { state = state.copy(busy = "Installing the x86 translator (FEX ${Engine.FEX_VERSION})…", progress = 0f) }
+            check(Engine.installFex(this) { p -> runOnUiThread { state = state.copy(progress = p / 100f) } }) {
+                "Translator install failed. Check your connection and try again."
             }
         }) {}
     }

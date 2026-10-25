@@ -2,6 +2,13 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.1.9] - 2026-10-25
+
+- Proton 10 fixed the sign-in loop: Battle.net's Agent now accepts the client.
+- New blank-window cause found: Battle.net.exe hit a stack overflow under the bundled FEX 2601 (Jan 2026).
+  Azeroid now installs **FEX 2610** (Oct 2026, pinned + SHA-256 checked) through the engine's content installer
+  during the runtime step, and uses it for every launch.
+
 ## [0.1.8] - 2026-10-25
 
 - Battle.net installer now always runs under Box64 (it crashes under FEX). The Battle.net app runs under
