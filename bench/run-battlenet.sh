@@ -39,6 +39,7 @@ wineserver -k; sleep 3
 echo "== Battle.net (HODLL=${BNET_HODLL:-libwow64fex.dll}) args: ${BNET_ARGS:-}"
 HODLL="${BNET_HODLL:-libwow64fex.dll}" wine "$BNET" ${BNET_ARGS:-} >"$OUT/battlenet.log" 2>&1 &
 for t in 30 60 90 120 150 180; do sleep 30; shot "bnet-${t}s"; note "battle.net ${t}s, processes: $(pgrep -fc Battle.net)"
+  [ $t -eq 30 ] && ps -eo pid,args | grep -- '--type=renderer' | head -2 | cut -c1-2000 > "$OUT/renderer-cmdline.txt"
   [ $t -eq 30 ] && ps -eo pid,args | grep -iE 'battle|agent' | grep -v grep | cut -c1-300 > "$OUT/processes-30s.txt"
   [ $t -eq 120 ] && ps -eo pid,args | grep -iE 'battle|agent' | grep -v grep | cut -c1-300 > "$OUT/processes-120s.txt"
 done
