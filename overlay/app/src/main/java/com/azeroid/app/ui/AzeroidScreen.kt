@@ -154,13 +154,16 @@ private fun copyFor(step: Step): StepCopy = when (step) {
     Step.ENGINE -> StepCopy(2, "Install the game engine",
         "Unpacks Wine, the x86 translator and the Vulkan drivers. Takes about a minute and only happens once.",
         "Install engine")
-    Step.CONTAINER -> StepCopy(3, "Create the WoW environment",
+    Step.RUNTIME -> StepCopy(3, "Download the Windows runtime",
+        "Proton 10 (about 130 MB), the Windows layer Battle.net needs. One-time download.",
+        "Download")
+    Step.CONTAINER -> StepCopy(4, "Create the WoW environment",
         "Sets up a Windows environment tuned for World of Warcraft on Snapdragon.",
         "Create")
-    Step.BATTLE_NET -> StepCopy(4, "Install Battle.net",
+    Step.BATTLE_NET -> StepCopy(5, "Install Battle.net",
         "Downloads Blizzard's official installer and runs it. If it closes before finishing, just tap the button again — it continues where it stopped.",
         "Download & install")
-    Step.WOW -> StepCopy(5, "Install WoW Classic",
+    Step.WOW -> StepCopy(6, "Install WoW Classic",
         "Log in to Battle.net, pick World of Warcraft → Classic version, and install it. To type, swipe Back once → Show Keyboard. Keep the screen on — it's a big download.",
         "Open Battle.net")
     Step.READY -> StepCopy(0, "Ready", "", "PLAY")
@@ -191,7 +194,7 @@ private fun MainCard(activity: AzeroidActivity, modifier: Modifier) {
                     Text(state.selected?.label ?: "", color = Muted)
                 }
             } else {
-                Text("Step ${copy.number} of 5", color = Gold, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                Text("Step ${copy.number} of 6", color = Gold, fontSize = 13.sp, fontWeight = FontWeight.Bold)
                 Text(copy.title, fontSize = 22.sp, fontWeight = FontWeight.Bold)
                 Text(copy.body, color = Muted)
             }

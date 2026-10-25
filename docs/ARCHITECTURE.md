@@ -7,7 +7,7 @@
         │  DirectX 11
  DXVK 2.3.1 gplasync ──► Vulkan ──► Adreno driver (Qualcomm system driver or Mesa Turnip, via adrenotools)
         │  Win32 API
- Wine / Proton 9 (ARM64EC build): Windows APIs run as native ARM64 code
+ Wine / Proton 10 (ARM64EC build): Windows APIs run as native ARM64 code
         │  x86-64 instructions in game code
  FEX-Emu (ARM64EC JIT): translates only the game's own x86 code
         │

@@ -2,6 +2,15 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.1.7] - 2026-10-25
+
+- **Real fix for the Battle.net sign-in loop: switch to Proton 10.** Battle.net's Agent rejects the client
+  on Wine/Proton 9 ("Failed Caller authorization due to signature", response 401). Wine/Proton 10+ works.
+  Azeroid now downloads Proton 10.0-5 (ARM64EC, ~130 MB, SHA-256 checked) as a new setup step and rebuilds the
+  WoW environment on it. A WoW install from an older environment is moved over, not re-downloaded.
+  You'll need to install Battle.net again (a few minutes).
+- Reverted 0.1.6's certificate import: the log showed Wine already had Android's 150 trusted roots.
+
 ## [0.1.6] - 2026-10-25
 
 - **Fix for the Battle.net sign-in loop.** Battle.net's Agent logged "Failed Caller authorization due to

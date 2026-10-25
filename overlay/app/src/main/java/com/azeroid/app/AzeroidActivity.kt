@@ -28,7 +28,7 @@ import com.azeroid.app.wow.WowInstall
 import com.winlator.cmod.container.Container
 import java.util.concurrent.Executors
 
-enum class Step { PERMISSIONS, ENGINE, CONTAINER, BATTLE_NET, WOW, READY }
+enum class Step { PERMISSIONS, ENGINE, RUNTIME, CONTAINER, BATTLE_NET, WOW, READY }
 
 /** What the screen shows; recomputed from disk every time the app comes to the front. */
 data class UiState(
@@ -83,6 +83,7 @@ class AzeroidActivity : AppCompatActivity() {
         val step = when {
             !hasStorageAccess() -> Step.PERMISSIONS
             !Engine.isCoreInstalled(this) -> Step.ENGINE
+            !Engine.isRuntimeInstalled(this) -> Step.RUNTIME
             else -> {
                 container = Engine.findContainer(this)
                 val c = container
@@ -105,6 +106,7 @@ class AzeroidActivity : AppCompatActivity() {
         when (state.step) {
             Step.PERMISSIONS -> requestPermissions()
             Step.ENGINE -> installEngine()
+            Step.RUNTIME -> installRuntime()
             Step.CONTAINER -> createContainer()
             Step.BATTLE_NET -> installBattleNet()
             Step.WOW -> openBattleNet()
@@ -145,11 +147,29 @@ class AzeroidActivity : AppCompatActivity() {
             })
     }
 
+    private fun installRuntime() {
+        busy("Downloading the Windows runtime (Proton 10, 130 MB)…", 0f)
+        background({
+            check(Engine.installRuntime(this) { p -> runOnUiThread { state = state.copy(progress = p / 100f) } }) {
+                "Runtime download failed. Check your connection and try again."
+            }
+        }) {}
+    }
+
     private fun createContainer() {
         busy("Creating your WoW environment…", null)
         Engine.createContainer(this) { c ->
             container = c
-            done(if (c != null) null else "Could not create the WoW environment. Try again, or share the log.")
+            val legacy = Engine.findLegacyContainer(this)
+            if (c == null || legacy == null) {
+                done(if (c != null) null else "Could not create the WoW environment. Try again, or share the log.")
+                return@createContainer
+            }
+            // Older Azeroid environment (Proton 9): keep the game files, drop the rest.
+            background({
+                check(Wow.moveGame(legacy, c)) { "Could not move WoW to the new environment." }
+                Engine.deleteContainer(this, legacy)
+            }) {}
         }
     }
 

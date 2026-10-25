@@ -22,6 +22,7 @@ object Diagnostics {
         appendLine("Device: ${Build.MANUFACTURER} ${Build.MODEL} (${Build.DEVICE})")
         appendLine("Android: ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})")
         appendLine("SoC: ${if (Build.VERSION.SDK_INT >= 31) Build.SOC_MODEL else Build.HARDWARE}")
+        appendLine("Runtime: ${Engine.findContainer(context)?.getWineVersion() ?: "(none)"} (target ${Engine.RUNTIME})")
         val prefs = AzeroidPrefs(context)
         appendLine("Settings: graphics=${prefs.graphics} gpu=${prefs.gpuDriver} emulation=${prefs.emulation} " +
             "launch=${prefs.launchMode} overlay=${prefs.overlay} fpsCap=${prefs.fpsCap} bnet=${prefs.bnetTranslator}")

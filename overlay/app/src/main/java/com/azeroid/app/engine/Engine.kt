@@ -14,8 +14,7 @@ import com.winlator.cmod.contents.ContentsManager
 import com.winlator.cmod.core.DefaultVersion
 import com.winlator.cmod.core.KeyValueSet
 import com.winlator.cmod.core.OpenGLDriverDefaults
-import com.winlator.cmod.core.WineInfo
-import com.winlator.cmod.core.WineRuntimeGuard
+import com.winlator.cmod.core.ProtonPackageManager
 import com.winlator.cmod.xenvironment.ImageFs
 import com.winlator.cmod.xenvironment.ImageFsInstaller
 import org.json.JSONObject
@@ -29,6 +28,12 @@ object Engine {
     private const val TAG = "Azeroid/Engine"
     const val CONTAINER_NAME = "Azeroid"
 
+    /**
+     * Wine runtime for the WoW environment. Proton 9 can't run current Battle.net: its Agent rejects the
+     * client ("Failed Caller authorization due to signature"); Wine/Proton 10+ is fine.
+     */
+    const val RUNTIME = "proton-10.0-5-arm64ec"
+
     /** Engine profile id of the bundled "Virtual Gamepad" on-screen layout (XInput buttons + sticks). */
     const val VIRTUAL_GAMEPAD_PROFILE_ID = 3
 
@@ -37,8 +42,7 @@ object Engine {
 
     fun isCoreInstalled(context: Context): Boolean {
         val fs = ImageFs.find(context)
-        return fs.isValid && fs.version >= ImageFsInstaller.LATEST_VERSION &&
-            WineRuntimeGuard.isBundledMainInstalled(context)
+        return fs.isValid && fs.version >= ImageFsInstaller.LATEST_VERSION
     }
 
     fun installCore(activity: AppCompatActivity, progress: (Int) -> Unit, done: (Boolean) -> Unit) {
@@ -48,15 +52,38 @@ object Engine {
         })
     }
 
+    fun isRuntimeInstalled(context: Context): Boolean = ProtonPackageManager.isInstalled(context, RUNTIME)
+
+    /** Blocking. Downloads (SHA-256 checked by the engine) and installs [RUNTIME]. */
+    fun installRuntime(context: Context, progress: (Int) -> Unit): Boolean {
+        val pkg = ProtonPackageManager.getPackage(RUNTIME) ?: return false
+        val archive = File(context.cacheDir, pkg.fileName)
+        try {
+            if (!ProtonPackageManager.downloadPackage(pkg, archive) { p -> progress(p) }) return false
+            return ProtonPackageManager.installPackage(context, RUNTIME, archive)
+        } finally {
+            archive.delete()
+        }
+    }
+
+    /** The WoW environment on the current runtime. */
     fun findContainer(context: Context): Container? =
-        ContainerManager(context).containers.firstOrNull { it.getName() == CONTAINER_NAME }
+        ContainerManager(context).containers.firstOrNull { it.getName() == CONTAINER_NAME && it.getWineVersion() == RUNTIME }
+
+    /** An Azeroid environment from an older release, on an older runtime. */
+    fun findLegacyContainer(context: Context): Container? =
+        ContainerManager(context).containers.firstOrNull { it.getName() == CONTAINER_NAME && it.getWineVersion() != RUNTIME }
+
+    /** Blocking. Deletes a container and everything in it. */
+    fun deleteContainer(context: Context, container: Container) {
+        com.winlator.cmod.core.FileUtils.delete(container.getRootDir())
+    }
 
     /** Creates the single WoW-tuned container. Calls back on the main thread. */
     fun createContainer(context: Context, onDone: (Container?) -> Unit) {
         val contents = ContentsManager(context)
         contents.syncContents()
         val manager = ContainerManager(context)
-        val wine = WineInfo.MAIN_WINE_VERSION
 
         val data = JSONObject().apply {
             put("name", CONTAINER_NAME)
@@ -76,7 +103,7 @@ object Engine {
             put("box64Preset", "COMPATIBILITY")
             put("fexcoreVersion", DefaultVersion.FEXCORE)
             put("fexcorePreset", "INTERMEDIATE")
-            put("wineVersion", wine.identifier())
+            put("wineVersion", RUNTIME)
         }
         OpenGLDriverDefaults.initialize(context, data)
 
