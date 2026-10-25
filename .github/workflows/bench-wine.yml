@@ -45,6 +45,7 @@ jobs:
           git init -q "$RUNNER_TEMP/wine" && cd "$RUNNER_TEMP/wine"
           git remote add origin "$GE_WINE_REPO"
           git fetch -q --depth 1 origin "$GE_WINE_REF" && git checkout -q FETCH_HEAD
+          git submodule update --init --depth 1   # dlls/winedirectaudio.drv
 
       - name: Configure + build
         run: |
