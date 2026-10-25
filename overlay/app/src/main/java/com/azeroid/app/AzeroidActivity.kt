@@ -180,7 +180,9 @@ class AzeroidActivity : AppCompatActivity() {
             Wow.downloadInstaller(c) { p -> runOnUiThread { state = state.copy(progress = p) } }
             Wow.tuneBattleNet(c)
         }) {
-            launch(c, "Battle.net Setup", Wow.installerWindowsPath(), battleNet = true, gameNext = false)
+            // Blizzard's installer overflows its stack under FEX but installs fine under Box64.
+            launch(c, "Battle.net Setup", Wow.installerWindowsPath(), battleNet = true, gameNext = false,
+                translator = BattleNetTranslator.BOX64)
         }
     }
 
@@ -218,7 +220,10 @@ class AzeroidActivity : AppCompatActivity() {
      * [gameNext] = WoW will run in this session. Pure Battle.net sessions (install, log in, patch) get
      * touch only: Battle.net's own controller handling crashes under Wine, and the overlay would cover its UI.
      */
-    private fun launch(c: Container, title: String, windowsExe: String, battleNet: Boolean = false, gameNext: Boolean = true) {
+    private fun launch(
+        c: Container, title: String, windowsExe: String, battleNet: Boolean = false, gameNext: Boolean = true,
+        translator: BattleNetTranslator = prefs.bnetTranslator,
+    ) {
         val overlay = gameNext && when (prefs.overlay) {
             ControllerOverlay.AUTO -> !hasGamepad()
             ControllerOverlay.ON -> true
@@ -231,9 +236,9 @@ class AzeroidActivity : AppCompatActivity() {
             fpsCap = prefs.fpsCap,
             showFps = prefs.showFps,
             onScreenController = overlay,
-            fexPreset = if (battleNet) prefs.bnetTranslator.fexPreset else prefs.emulation.fexPreset,
-            emulator32 = if (battleNet) prefs.bnetTranslator.emulator else null,
-            box64Preset = if (battleNet) prefs.bnetTranslator.box64Preset else null,
+            fexPreset = if (battleNet) translator.fexPreset else prefs.emulation.fexPreset,
+            emulator32 = if (battleNet) translator.emulator else null,
+            box64Preset = if (battleNet) translator.box64Preset else null,
             gpuDriverVersion = prefs.gpuDriver.engineVersion,
             extraEnv = if (battleNet) mapOf(
                 "WINEDLLOVERRIDES" to "locationapi=d",

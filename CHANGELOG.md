@@ -2,6 +2,13 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.1.8] - 2026-10-25
+
+- Battle.net installer now always runs under Box64 (it crashes under FEX). The Battle.net app runs under
+  FEX by default: under Box64 its built-in browser fails TLS and the sign-in page stays blank.
+  Your earlier translator choice is reset to the new default.
+- Battle.net now exits completely when WoW starts, freeing ~1.7 GB of RAM for the game.
+
 ## [0.1.7] - 2026-10-25
 
 - **Real fix for the Battle.net sign-in loop: switch to Proton 10.** Battle.net's Agent rejects the client

@@ -76,6 +76,8 @@ object Wow {
         client.put("HardwareAcceleration", "false")
         val streaming = client.optJSONObject("Streaming") ?: JSONObject().also { client.put("Streaming", it) }
         streaming.put("StreamingEnabled", "false")
+        // "Exit Battle.net completely" once a game starts: frees ~1.7 GB of RAM for WoW.
+        client.put("GameLaunchWindowBehavior", "2")
         file.writeText(json.toString(2))
     }
 

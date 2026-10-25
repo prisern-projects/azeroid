@@ -32,9 +32,9 @@ enum class EmulationMode(val label: String, val fexPreset: String) {
  * Battle.net is picky under emulation, so this is separate from the game's setting.
  */
 enum class BattleNetTranslator(val label: String, val emulator: String, val fexPreset: String, val box64Preset: String) {
-    BOX64("Box64", "Box64", "COMPATIBILITY", "COMPATIBILITY"),
     FEX_SAFE("FEX safe", "FEXCore", "COMPATIBILITY", "COMPATIBILITY"),
     FEX_FAST("FEX fast", "FEXCore", "INTERMEDIATE", "COMPATIBILITY"),
+    BOX64("Box64", "Box64", "COMPATIBILITY", "COMPATIBILITY"),
 }
 
 enum class LaunchMode(val label: String) {
@@ -67,8 +67,9 @@ class AzeroidPrefs(context: Context) {
         set(v) = sp.edit().putString("launch", v.name).apply()
 
     var bnetTranslator: BattleNetTranslator
-        get() = enumOr(sp.getString("bnetTranslator", null), BattleNetTranslator.BOX64)
-        set(v) = sp.edit().putString("bnetTranslator", v.name).apply()
+        // Key renamed in 0.1.8 so everyone moves to the new default (Box64 breaks the sign-in page's TLS).
+        get() = enumOr(sp.getString("bnetTranslator2", null), BattleNetTranslator.FEX_SAFE)
+        set(v) = sp.edit().putString("bnetTranslator2", v.name).apply()
 
     var showFps: Boolean
         get() = sp.getBoolean("fps", false)
