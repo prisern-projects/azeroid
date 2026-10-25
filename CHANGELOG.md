@@ -2,6 +2,11 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.1.12] - 2026-10-25
+
+- *Advanced → Detailed logs*: traces Wine's network, connectivity and TLS layers in Battle.net sessions,
+  to find out why Battle.net freezes after opening the login page on Proton 10/11.
+
 ## [0.1.11] - 2026-10-25
 
 - New: *Advanced → Windows runtime*: Proton 10 or Proton 11 (each pinned + SHA-256 checked).

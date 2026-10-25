@@ -83,6 +83,11 @@ class AzeroidPrefs(context: Context) {
         get() = enumOr(sp.getString("runtime", null), Runtime.PROTON_10)
         set(v) = sp.edit().putString("runtime", v.name).apply()
 
+    /** Extra Wine tracing (network, connectivity, TLS) for bug reports. Makes things slower. */
+    var detailedLogs: Boolean
+        get() = sp.getBoolean("detailedLogs", false)
+        set(v) = sp.edit().putBoolean("detailedLogs", v).apply()
+
     var showFps: Boolean
         get() = sp.getBoolean("fps", false)
         set(v) = sp.edit().putBoolean("fps", v).apply()

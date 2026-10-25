@@ -249,7 +249,9 @@ class AzeroidActivity : AppCompatActivity() {
             extraEnv = if (battleNet) mapOf(
                 "WINEDLLOVERRIDES" to "locationapi=d",
                 // Wine errors + crash reports (not fixme spam) into the session log, for "Share log".
-                "WINEDEBUG" to "fixme-all",
+                "WINEDEBUG" to if (prefs.detailedLogs)
+                    "fixme-all,+netprofm,+nsi,+iphlpapi,+winhttp,+wininet,+secur32,+winsock,+loaddll"
+                else "fixme-all",
             ) else emptyMap(),
             gamepadToGame = gameNext,
         ))

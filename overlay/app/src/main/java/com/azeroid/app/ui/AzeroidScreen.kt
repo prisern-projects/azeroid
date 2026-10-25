@@ -297,6 +297,11 @@ private fun AdvancedDialog(activity: AzeroidActivity, onClose: () -> Unit) {
                     Switch(checked = prefs.autoUpdate, onCheckedChange = { prefs.autoUpdate = it; activity.settingsChanged() })
                 }
 
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Detailed logs (for bug reports, slower)", Modifier.weight(1f))
+                    Switch(checked = prefs.detailedLogs, onCheckedChange = { prefs.detailedLogs = it; activity.settingsChanged() })
+                }
+
                 OutlinedButton(onClick = { onClose(); activity.openEngineTools() }) { Text("Open engine tools (experts)") }
             }
         },

@@ -25,7 +25,7 @@ object Diagnostics {
         appendLine("Runtime: ${Engine.findContainer(context)?.getWineVersion() ?: "(none)"} (target ${Engine.runtime(context)})")
         val prefs = AzeroidPrefs(context)
         appendLine("Settings: graphics=${prefs.graphics} gpu=${prefs.gpuDriver} emulation=${prefs.emulation} " +
-            "launch=${prefs.launchMode} overlay=${prefs.overlay} fpsCap=${prefs.fpsCap} bnet=${prefs.bnetTranslator}")
+            "launch=${prefs.launchMode} overlay=${prefs.overlay} fpsCap=${prefs.fpsCap} bnet=${prefs.bnetTranslator} runtime=${prefs.runtime} detailed=${prefs.detailedLogs}")
     }
 
     private fun recentLog(): String = runCatching {
@@ -38,7 +38,7 @@ object Diagnostics {
         Engine.logDir(context).listFiles { f -> f.name.endsWith(".txt") }
             ?.sortedByDescending { it.lastModified() }
             ?.take(3)
-            ?.joinToString("\n") { f -> "----- ${f.name} -----\n" + f.readText().takeLast(400_000) }
+            ?.joinToString("\n") { f -> "----- ${f.name} -----\n" + f.readText().takeLast(if (AzeroidPrefs(context).detailedLogs) 1_500_000 else 400_000) }
             ?: "(no engine logs yet)"
     }.getOrElse { "(engine logs unavailable: ${it.message})" }
 
