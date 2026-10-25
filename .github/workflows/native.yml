@@ -70,3 +70,73 @@ jobs:
           gh release create "$tag" dxvk-arm64-*.tar.xz* --prerelease --target "$GITHUB_SHA" \
             --title "DXVK ${DXVK_REF} for plain ARM64 Windows" \
             --notes "Upstream DXVK ${DXVK_REF}, cross-compiled with llvm-mingw ${LLVM_MINGW} for aarch64-w64-mingw32. For Blizzard's native ARM64 WoW client. Unmodified."
+
+  fex-bridges:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Versions
+        run: cat native/versions.properties | grep -v '^#' >> "$GITHUB_ENV"
+
+      - name: Toolchain (llvm-mingw ${{ env.LLVM_MINGW }})
+        run: |
+          sudo apt-get update -q && sudo apt-get install -yq ninja-build cmake
+          f="llvm-mingw-${LLVM_MINGW}-ucrt-ubuntu-22.04-x86_64.tar.xz"
+          curl -fsSL "https://github.com/mstorsjo/llvm-mingw/releases/download/${LLVM_MINGW}/$f" -o "$RUNNER_TEMP/$f"
+          tar -xf "$RUNNER_TEMP/$f" -C "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/${f%.tar.xz}/bin" >> "$GITHUB_PATH"
+
+      - name: FEX source (${{ env.FEX_REF }})
+        run: |
+          git init -q "$RUNNER_TEMP/fex" && cd "$RUNNER_TEMP/fex"
+          git remote add origin https://github.com/FEX-Emu/FEX
+          git fetch -q --depth 1 origin "$FEX_REF" && git checkout -q FETCH_HEAD
+          git submodule update --init --depth 1 --recursive
+
+      - name: Build wow64 + arm64ec bridges
+        run: |
+          cd "$RUNNER_TEMP/fex"
+          for target in wow64 arm64ec; do
+            case $target in wow64) cc=aarch64 ;; arm64ec) cc=arm64ec ;; esac
+            cmake -S . -B build_$target -G Ninja -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_TOOLCHAIN_FILE=Data/CMake/toolchain_mingw.cmake -DMINGW_TRIPLE=${cc}-w64-mingw32 \
+              -DCMAKE_INSTALL_LIBDIR=/usr/lib/wine/aarch64-windows -DCMAKE_INSTALL_PREFIX=/usr \
+              -DENABLE_LTO=False -DENABLE_ASSERTIONS=False -DENABLE_JEMALLOC_GLIBC_ALLOC=False \
+              -DBUILD_TESTING=False -DTUNE_ARCH=generic -DTUNE_CPU=none
+            cmake --build build_$target
+            DESTDIR="$PWD/install" cmake --build build_$target -t install
+          done
+          ls -la install/usr/lib/wine/aarch64-windows/
+
+      - name: Package as engine content (.wcp)
+        run: |
+          out="$RUNNER_TEMP/wcp" && mkdir -p "$out/system32"
+          cp "$RUNNER_TEMP"/fex/install/usr/lib/wine/aarch64-windows/libwow64fex.dll "$out/system32/"
+          cp "$RUNNER_TEMP"/fex/install/usr/lib/wine/aarch64-windows/libarm64ecfex.dll "$out/system32/"
+          cat > "$out/profile.json" <<JSON
+          {
+            "type": "FEXCore",
+            "versionName": "${FEX_NAME}",
+            "versionCode": 0,
+            "description": "FEX ${FEX_REF} (Azeroid CI build)",
+            "files": [
+              { "source": "system32/libarm64ecfex.dll", "target": "\${system32}/libarm64ecfex.dll" },
+              { "source": "system32/libwow64fex.dll", "target": "\${system32}/libwow64fex.dll" }
+            ]
+          }
+          JSON
+          cat "$out/profile.json"
+          tar -C "$out" -cJf "$GITHUB_WORKSPACE/fexcore-${FEX_NAME}.wcp" profile.json system32
+          sha256sum "$GITHUB_WORKSPACE/fexcore-${FEX_NAME}.wcp" | tee "$GITHUB_WORKSPACE/fexcore-${FEX_NAME}.wcp.sha256"
+
+      - name: Publish pre-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="native-fex-${FEX_NAME}"
+          gh release view "$tag" >/dev/null 2>&1 && gh release delete "$tag" --yes --cleanup-tag
+          gh release create "$tag" fexcore-*.wcp* --prerelease --target "$GITHUB_SHA" \
+            --title "FEX ${FEX_NAME} (${FEX_REF:0:7}) Wine bridges" \
+            --notes "FEX-Emu at ${FEX_REF}, built for Wine ARM64EC/WoW64 with llvm-mingw ${LLVM_MINGW}. Unmodified."
