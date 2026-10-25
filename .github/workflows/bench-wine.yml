@@ -28,7 +28,9 @@ jobs:
           sudo apt-get install -yq build-essential flex bison gettext ccache \
             libx11-dev libxext-dev libxrender-dev libxrandr-dev libxi-dev libxcursor-dev libxcomposite-dev \
             libxfixes-dev libxinerama-dev libxxf86vm-dev libfreetype-dev libfontconfig-dev libgnutls28-dev \
-            libvulkan-dev libgl-dev libegl-dev libdbus-1-dev libpulse-dev libasound2-dev libunwind-dev libkrb5-dev
+            libvulkan-dev libgl-dev libegl-dev libdbus-1-dev libpulse-dev libasound2-dev libunwind-dev libkrb5-dev \
+            libdrm-dev libgbm-dev libwayland-dev libxkbcommon-dev libudev-dev libusb-1.0-0-dev libpcap-dev libcups2-dev \
+            libosmesa6-dev libv4l-dev libsane-dev libcapi20-dev libpcsclite-dev libgphoto2-dev libssl-dev
 
       - name: llvm-mingw (ARM64EC capable, aarch64 host)
         run: |
@@ -56,7 +58,8 @@ jobs:
           ./autogen.sh 2>&1 | tail -5
           ./configure --prefix=/opt/wine --enable-archs=arm64ec,aarch64,i386 --with-mingw=clang \
             --disable-tests --without-gstreamer --without-sdl --without-ffmpeg 2>&1 | tee "$GITHUB_WORKSPACE/wine.log" | tail -30
-          make -j"$(nproc)" >> "$GITHUB_WORKSPACE/wine.log" 2>&1; rc=$?
+          make -k -j"$(nproc)" >> "$GITHUB_WORKSPACE/wine.log" 2>&1; rc=$?
+          grep -E "fatal error|error:" "$GITHUB_WORKSPACE/wine.log" | sort -u | head -40
           echo "make exit $rc"; test $rc -eq 0
           make install DESTDIR="$RUNNER_TEMP/out" >/dev/null 2>&1
 
@@ -64,7 +67,7 @@ jobs:
         if: failure()
         run: |
           annotate() { python3 -c 'import sys; t=sys.stdin.read()[-30000:]; print("::error title=%s::" % sys.argv[1] + t.replace("%","%25").replace("\r","").replace("\n","%0A"))' "$1"; }
-          grep -E -B3 -A3 'error:|Error [0-9]|configure: error' wine.log | head -150 | annotate "wine errors" || true
+          grep -E 'fatal error|error:|configure: error' wine.log | sort -u | head -150 | annotate "wine errors" || true
           tail -60 wine.log | annotate "wine tail" || true
 
       - name: Publish
