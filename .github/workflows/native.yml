@@ -97,6 +97,7 @@ jobs:
 
       - name: Build wow64 + arm64ec bridges
         run: |
+          set -o pipefail
           cd "$RUNNER_TEMP/fex"
           for target in wow64 arm64ec; do
             case $target in wow64) cc=aarch64 ;; arm64ec) cc=arm64ec ;; esac
@@ -104,11 +105,18 @@ jobs:
               -DCMAKE_TOOLCHAIN_FILE=Data/CMake/toolchain_mingw.cmake -DMINGW_TRIPLE=${cc}-w64-mingw32 \
               -DCMAKE_INSTALL_LIBDIR=/usr/lib/wine/aarch64-windows -DCMAKE_INSTALL_PREFIX=/usr \
               -DENABLE_LTO=False -DENABLE_ASSERTIONS=False -DENABLE_JEMALLOC_GLIBC_ALLOC=False \
-              -DBUILD_TESTING=False -DTUNE_ARCH=generic -DTUNE_CPU=none
-            cmake --build build_$target
-            DESTDIR="$PWD/install" cmake --build build_$target -t install
+              -DBUILD_TESTING=False -DTUNE_ARCH=generic -DTUNE_CPU=none 2>&1 | tee -a "$GITHUB_WORKSPACE/fex.log"
+            cmake --build build_$target 2>&1 | tee -a "$GITHUB_WORKSPACE/fex.log"
+            DESTDIR="$PWD/install" cmake --build build_$target -t install 2>&1 | tee -a "$GITHUB_WORKSPACE/fex.log"
           done
           ls -la install/usr/lib/wine/aarch64-windows/
+
+      - name: Surface build errors
+        if: failure()
+        run: |
+          annotate() { python3 -c 'import sys; t=sys.stdin.read()[-30000:]; print("::error title=%s::" % sys.argv[1] + t.replace("%","%25").replace("\r","").replace("\n","%0A"))' "$1"; }
+          grep -E -B2 -A4 'error:|Error|FAILED|CMake Error' fex.log | head -120 | annotate "fex errors" || true
+          tail -60 fex.log | annotate "fex tail" || true
 
       - name: Package as engine content (.wcp)
         run: |
