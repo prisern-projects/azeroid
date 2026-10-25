@@ -1,0 +1,74 @@
+name: Bench Wine (GE-Proton 10 for Linux ARM64)
+
+# Builds the same Wine source as the phone's GE-Proton 10.0-34 runtime, natively for ARM64 Linux, so the
+# Battle.net bench runs the phone's exact Windows-side code (incl. Proton's Battle.net hacks).
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/bench-wine.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  wine:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 240
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Versions
+        run: grep -v '^#' native/versions.properties >> "$GITHUB_ENV"
+
+      - name: Build dependencies
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -yq build-essential flex bison gettext ccache \
+            libx11-dev libxext-dev libxrender-dev libxrandr-dev libxi-dev libxcursor-dev libxcomposite-dev \
+            libxfixes-dev libxinerama-dev libxxf86vm-dev libfreetype-dev libfontconfig-dev libgnutls28-dev \
+            libvulkan-dev libgl-dev libegl-dev libdbus-1-dev libpulse-dev libasound2-dev libunwind-dev libkrb5-dev
+
+      - name: llvm-mingw (ARM64EC capable, aarch64 host)
+        run: |
+          for src in "bylaws/llvm-mingw 20250920" "mstorsjo/llvm-mingw 20250920"; do
+            set -- $src
+            f="llvm-mingw-$2-ucrt-ubuntu-22.04-aarch64.tar.xz"
+            if curl -fsSL "https://github.com/$1/releases/download/$2/$f" -o "$RUNNER_TEMP/$f"; then
+              tar -xf "$RUNNER_TEMP/$f" -C "$RUNNER_TEMP"; echo "$RUNNER_TEMP/${f%.tar.xz}/bin" >> "$GITHUB_PATH"; echo "using $1"; break
+            fi
+          done
+
+      - name: Source (${{ env.GE_WINE_REF }})
+        run: |
+          git init -q "$RUNNER_TEMP/wine" && cd "$RUNNER_TEMP/wine"
+          git remote add origin "$GE_WINE_REPO"
+          git fetch -q --depth 1 origin "$GE_WINE_REF" && git checkout -q FETCH_HEAD
+
+      - name: Configure + build
+        run: |
+          set -o pipefail
+          cd "$RUNNER_TEMP/wine"
+          [ -x ./configure ] || ./autogen.sh 2>&1 | tail -5 || autoreconf -fi
+          tools/make_requests 2>/dev/null || true
+          ./configure --prefix=/opt/wine --enable-archs=arm64ec,aarch64,i386 --with-mingw=clang \
+            --disable-tests --without-gstreamer --without-sdl --without-ffmpeg 2>&1 | tee "$GITHUB_WORKSPACE/wine.log" | tail -30
+          make -j"$(nproc)" 2>&1 | tee -a "$GITHUB_WORKSPACE/wine.log" | grep -E "error|Error" | head -50 || true
+          test ${PIPESTATUS[0]} -eq 0
+          make install DESTDIR="$RUNNER_TEMP/out" >/dev/null 2>&1
+
+      - name: Surface build errors
+        if: failure()
+        run: |
+          annotate() { python3 -c 'import sys; t=sys.stdin.read()[-30000:]; print("::error title=%s::" % sys.argv[1] + t.replace("%","%25").replace("\r","").replace("\n","%0A"))' "$1"; }
+          grep -E -B3 -A3 'error:|Error [0-9]|configure: error' wine.log | head -150 | annotate "wine errors" || true
+          tail -60 wine.log | annotate "wine tail" || true
+
+      - name: Publish
+        run: |
+          tar -C "$RUNNER_TEMP/out" -cJf wine-ge10-linux-arm64.tar.xz opt
+          ls -la wine-ge10-linux-arm64.tar.xz
+          gh release delete bench-wine-ge10 --yes --cleanup-tag 2>/dev/null || true
+          gh release create bench-wine-ge10 wine-ge10-linux-arm64.tar.xz --prerelease --target "$GITHUB_SHA" \
+            --title "Bench Wine: GE-Proton 10.0-34 source for Linux ARM64" --notes "${GE_WINE_REPO}@${GE_WINE_REF}, ARM64EC/aarch64/i386"
