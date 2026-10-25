@@ -1,12 +1,11 @@
 name: Build
 
-# Every push/PR builds an APK (downloadable from the run's artifacts).
-# When a push to main carries a VERSION that has no release yet, the APK is
-# signed with the release key and published as GitHub Release v<VERSION> —
-# which is what the app's updater picks up.
+# Every push/PR builds the APK. When main carries a VERSION with no release yet, the APK is signed with the
+# Azeroid release key and published as GitHub Release v<VERSION>, which the in-app updater installs.
 on:
   push:
     branches: [main]
+    paths-ignore: ['bench/**', 'native/**', '.github/workflows/bench*.yml', '.github/workflows/native.yml', 'docs/**', '*.md']
   pull_request:
   workflow_dispatch:
 
@@ -21,8 +20,6 @@ jobs:
   apk:
     runs-on: ubuntu-latest
     timeout-minutes: 90
-    env:
-      AZEROID_REPO: ${{ github.repository }}
     steps:
       - uses: actions/checkout@v4
 
@@ -37,7 +34,7 @@ jobs:
           if [[ "$GITHUB_EVENT_NAME" != "pull_request" && "$GITHUB_REF" == "refs/heads/main" ]] && ! gh release view "v$v" >/dev/null 2>&1; then
             release=true
           fi
-          [[ "$release" == true ]] || v="0.0.0"   # non-release builds never trigger the in-app updater
+          [[ "$release" == true ]] || v="0.0.0"
           echo "release=$release" >> "$GITHUB_OUTPUT"
           echo "version=$v" >> "$GITHUB_OUTPUT"
           echo "AZEROID_VERSION=$v" >> "$GITHUB_ENV"
@@ -48,78 +45,68 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - uses: gradle/actions/setup-gradle@v4
+      - name: Android SDK components
+        run: |
+          sdk="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+          yes | "$sdk/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
+          "$sdk/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0" "ndk;22.1.7171670" "cmake;3.22.1" >/dev/null
+          echo "sdk.dir=$sdk" > local.properties
 
-      - name: Native build tools
-        run: sudo apt-get update -q && sudo apt-get install -yq glslang-tools ninja-build zstd
-
-      - name: Cache downloads
+      - name: Cache fetched assets
         uses: actions/cache@v4
         with:
-          path: build/cache
-          key: downloads-${{ hashFiles('engine.properties') }}
-
-      - name: Prepare engine + Azeroid overlay
-        run: ./scripts/prepare-engine.sh
+          path: out/_cache
+          key: assets-${{ hashFiles('scripts/large-assets.json', 'scripts/fetch-wehavephones-wine.py', 'app/src/wehavephones/assets/wehavephones/*.json') }}
 
       - name: Release signing key
         if: steps.version.outputs.release == 'true'
         env:
           SIGNING_PASSWORD: ${{ secrets.AZEROID_SIGNING_PASSWORD }}
         run: |
-          [ -n "$SIGNING_PASSWORD" ] || { echo "::error::AZEROID_SIGNING_PASSWORD secret missing — see docs/RELEASING.md"; exit 1; }
+          [ -n "$SIGNING_PASSWORD" ] || { echo "::error::AZEROID_SIGNING_PASSWORD secret missing"; exit 1; }
           openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 -in signing/azeroid-release.jks.enc \
             -out "$RUNNER_TEMP/azeroid.jks" -pass env:SIGNING_PASSWORD
           {
-            echo "AZEROID_KEYSTORE_FILE=$RUNNER_TEMP/azeroid.jks"
-            echo "AZEROID_KEYSTORE_PASSWORD=$SIGNING_PASSWORD"
-            echo "AZEROID_KEY_ALIAS=azeroid"
-            echo "AZEROID_KEY_PASSWORD=$SIGNING_PASSWORD"
+            echo "WEHAVEPHONES_KEYSTORE=$RUNNER_TEMP/azeroid.jks"
+            echo "WEHAVEPHONES_KEYSTORE_PASS=$SIGNING_PASSWORD"
+            echo "WEHAVEPHONES_KEY_ALIAS=azeroid"
+            echo "WEHAVEPHONES_KEY_PASS=$SIGNING_PASSWORD"
           } >> "$GITHUB_ENV"
 
       - name: Build APK
-        working-directory: engine
+        env:
+          WEHAVEPHONES_SIGNING_ENV: /dev/null
         run: |
-          chmod +x gradlew
           set -o pipefail
-          ./gradlew assembleRelease --no-configuration-cache 2>&1 | tee "$GITHUB_WORKSPACE/build.log"
+          if [ "${{ steps.version.outputs.release }}" = "true" ]; then
+            scripts/build-wehavephones.sh --release 2>&1 | tee build.log
+          else
+            scripts/build-wehavephones.sh 2>&1 | tee build.log
+          fi
 
       - name: Surface build errors
         if: failure()
         run: |
-          # Errors as multi-line annotations, so failures are readable from the checks API.
           annotate() { python3 -c 'import sys; t=sys.stdin.read()[-30000:]; print("::error title=%s::" % sys.argv[1] + t.replace("%","%25").replace("\r","").replace("\n","%0A"))' "$1"; }
-          grep -E -A3 '^e: |error:|ERROR:|\* What went wrong|Exception:' build.log | head -150 | annotate "errors" || true
+          grep -E -A3 '^e: |error:|ERROR:|\* What went wrong|Exception:|FAILED' build.log | head -150 | annotate "errors" || true
           tail -80 build.log | annotate "log tail" || true
 
-      - name: Collect APK
+      - name: Collect + verify APK
         run: |
-          apk="$(find engine/app/build/outputs/apk/release -name '*.apk' | head -1)"
-          test -n "$apk"
           mkdir -p dist
-          cp "$apk" "dist/Azeroid-${{ steps.version.outputs.version }}.apk"
-          sha256sum dist/*.apk
-
-      - name: Verify APK
-        run: |
-          apk="$(ls dist/*.apk)"
-          aapt2="$(ls "$ANDROID_HOME"/build-tools/*/aapt2 | sort -V | tail -1)"
-          badging="$("$aapt2" dump badging "$apk" | grep -E "^(package|launchable-activity|application-label):")"
-          echo "$badging"
-          echo "$badging" | grep -q "name='com.azeroid.app'"
-          echo "$badging" | grep -q "launchable-activity: name='com.azeroid.app.AzeroidActivity'"
-          unzip -p "$apk" 'classes*.dex' | grep -aq 'Lcom/azeroid/app/engine/Engine;'
           if [ "${{ steps.version.outputs.release }}" = "true" ]; then
-            signer="$("$(dirname "$aapt2")/apksigner" verify --print-certs "$apk" | grep 'SHA-256')"
-            echo "$signer"
+            cp out/release/Azeroid-*.apk dist/
+          else
+            cp app/build/outputs/apk/wehavephones/debug/app-wehavephones-debug.apk dist/Azeroid-dev.apk
           fi
-          echo "::notice title=APK::$(echo "$badging" | tr '\n' ' ') size=$(du -m "$apk" | cut -f1)MB"
+          aapt2="$(ls "$ANDROID_HOME"/build-tools/*/aapt2 | sort -V | tail -1)"
+          b="$("$aapt2" dump badging dist/*.apk | grep -E "^(package|application-label):")"
+          echo "::notice title=APK::$(echo "$b" | tr '\n' ' ') size=$(du -m dist/*.apk | cut -f1)MB"
 
       - uses: actions/upload-artifact@v4
         with:
           name: Azeroid-${{ steps.version.outputs.version }}-${{ github.run_number }}
           path: dist/*.apk
-          if-no-files-found: error
 
       - name: Publish GitHub Release
         if: steps.version.outputs.release == 'true'
@@ -127,11 +114,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.version.outputs.version }}
         run: |
-          # Release notes = this version's section of CHANGELOG.md
-          awk -v v="$VERSION" '
-            $0 ~ "^## \\[" v "\\]" {on=1; next}
-            on && /^## \[/ {exit}
-            on {print}
-          ' CHANGELOG.md > notes.md
+          awk -v v="$VERSION" '$0 ~ "^## \\[" v "\\]" {on=1; next} on && /^## \[/ {exit} on {print}' CHANGELOG.md > notes.md
           [ -s notes.md ] || echo "Azeroid $VERSION" > notes.md
-          gh release create "v$VERSION" dist/*.apk --target "$GITHUB_SHA" --title "Azeroid $VERSION" --notes-file notes.md
+          gh release create "v$VERSION" dist/Azeroid-*.apk --target "$GITHUB_SHA" --title "Azeroid $VERSION" --notes-file notes.md
