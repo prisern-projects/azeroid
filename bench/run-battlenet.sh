@@ -11,7 +11,8 @@ note() { echo "::notice title=bench::$(date +%T) $*"; echo "$(date +%T) $*" >> "
 
 echo "== wine: $(wine --version)"
 note "wineboot start"
-timeout 600 wineboot -i >"$OUT/wineboot.log" 2>&1; note "wineboot exit=$?"
+# No Mono/Gecko prompts: they block wineboot on a dialog nobody can click.
+WINEDLLOVERRIDES="mscoree=d;mshtml=d" timeout 600 wineboot -i >"$OUT/wineboot.log" 2>&1; note "wineboot exit=$? kernel32(32-bit)=$([ -f "$WINEPREFIX/drive_c/windows/syswow64/kernel32.dll" ] && echo yes || echo no)"
 timeout 120 wineserver -w; note "prefix ready"
 
 mkdir -p "$WINEPREFIX/drive_c/users/$USER/AppData/Roaming/Battle.net"
@@ -26,6 +27,7 @@ note "installer started"
 for i in $(seq 1 90); do [ -f "$BNET" ] && break; sleep 10; [ $((i % 6)) -eq 0 ] && { shot "setup-$i"; note "installer waiting ${i}0s"; }; done
 note "installer: Battle.net.exe present=$([ -f "$BNET" ] && echo yes || echo no)"
 sleep 30; shot setup-done
+note "syswow64 kernel32 present=$([ -f "$WINEPREFIX/drive_c/windows/syswow64/kernel32.dll" ] && echo yes || echo no)"
 wineserver -k; sleep 3
 [ -f "$BNET" ] || { echo "Battle.net not installed"; exit 1; }
 
