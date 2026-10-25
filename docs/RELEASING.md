@@ -19,24 +19,14 @@ opened (or right away via *Check for updates*).
 ## Signing key (one-time setup)
 
 Updates only install over the existing app when every release is signed with the **same key**.
-The key lives only in GitHub Actions secrets, never in the repo:
+That key is committed **encrypted** in [`signing/`](../signing). The only secret is its password:
 
-| Secret | Content |
-|---|---|
-| `AZEROID_KEYSTORE_BASE64` | `base64 -w0 azeroid-release.jks` |
-| `AZEROID_KEYSTORE_PASSWORD` | keystore password |
-| `AZEROID_KEY_ALIAS` | `azeroid` |
-| `AZEROID_KEY_PASSWORD` | key password |
+*Repo → Settings → Secrets and variables → Actions → New repository secret*
+- Name: `AZEROID_SIGNING_PASSWORD`
+- Value: the password (keep a private copy, e.g. in your password manager)
 
-Create one with:
-
-```sh
-keytool -genkeypair -v -keystore azeroid-release.jks -alias azeroid \
-  -keyalg RSA -keysize 4096 -validity 36500 -dname "CN=Azeroid"
-```
-
-**Back the keystore up somewhere private.** If it's lost, future versions can't update the installed app. You'd
-have to uninstall, which deletes the downloaded game.
+If the password is lost, future versions can't update the installed app. You'd have to uninstall,
+which deletes the downloaded game.
 
 ## Bumping the engine
 

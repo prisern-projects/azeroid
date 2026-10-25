@@ -62,18 +62,16 @@ jobs:
       - name: Release signing key
         if: steps.version.outputs.release == 'true'
         env:
-          KEYSTORE_B64: ${{ secrets.AZEROID_KEYSTORE_BASE64 }}
-          KEYSTORE_PASSWORD: ${{ secrets.AZEROID_KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.AZEROID_KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.AZEROID_KEY_PASSWORD }}
+          SIGNING_PASSWORD: ${{ secrets.AZEROID_SIGNING_PASSWORD }}
         run: |
-          [ -n "$KEYSTORE_B64" ] || { echo "::error::AZEROID_KEYSTORE_BASE64 secret missing — see docs/RELEASING.md"; exit 1; }
-          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/azeroid.jks"
+          [ -n "$SIGNING_PASSWORD" ] || { echo "::error::AZEROID_SIGNING_PASSWORD secret missing — see docs/RELEASING.md"; exit 1; }
+          openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 -in signing/azeroid-release.jks.enc \
+            -out "$RUNNER_TEMP/azeroid.jks" -pass env:SIGNING_PASSWORD
           {
             echo "AZEROID_KEYSTORE_FILE=$RUNNER_TEMP/azeroid.jks"
-            echo "AZEROID_KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD"
-            echo "AZEROID_KEY_ALIAS=$KEY_ALIAS"
-            echo "AZEROID_KEY_PASSWORD=$KEY_PASSWORD"
+            echo "AZEROID_KEYSTORE_PASSWORD=$SIGNING_PASSWORD"
+            echo "AZEROID_KEY_ALIAS=azeroid"
+            echo "AZEROID_KEY_PASSWORD=$SIGNING_PASSWORD"
           } >> "$GITHUB_ENV"
 
       - name: Build APK
