@@ -18,7 +18,7 @@ permissions:
 jobs:
   battlenet:
     runs-on: ubuntu-24.04-arm
-    timeout-minutes: 60
+    timeout-minutes: 55
     env:
       GH_TOKEN: ${{ github.token }}
       BNET_HODLL: ${{ inputs.bnet_hodll || 'libwow64fex.dll' }}
@@ -44,6 +44,7 @@ jobs:
           wine --version
 
       - name: Run bench
+        timeout-minutes: 40
         env:
           OUT: ${{ github.workspace }}/bench-out
         run: bench/run-battlenet.sh 2>&1 | tee bench-out-console.log
@@ -54,5 +55,6 @@ jobs:
           mkdir -p bench-out && cp bench-out-console.log bench-out/ 2>/dev/null || true
           tar -czf bench-results.tar.gz bench-out
           gh release delete bench-latest --yes --cleanup-tag 2>/dev/null || true
-          gh release create bench-latest bench-results.tar.gz bench-out/*.png --prerelease --target "$GITHUB_SHA" \
+          tail -40 bench-out/progress.txt bench-out-console.log 2>/dev/null | python3 -c 'import sys; print("::notice title=bench console::" + sys.stdin.read()[-20000:].replace("%","%25").replace("\n","%0A"))'
+          gh release create bench-latest bench-results.tar.gz --prerelease --target "$GITHUB_SHA" \
             --title "Battle.net bench (latest run)" --notes "HODLL=$BNET_HODLL ARGS=$BNET_ARGS WINEDEBUG=$WINEDEBUG"

@@ -7,9 +7,12 @@ export DISPLAY=:99 WINEPREFIX="$HOME/bnet" WINEDEBUG="${WINEDEBUG:-fixme-all}" W
 Xvfb :99 -screen 0 1920x864x24 >/dev/null 2>&1 &
 sleep 2
 shot() { import -window root "$OUT/$1.png" 2>/dev/null || true; }
+note() { echo "::notice title=bench::$(date +%T) $*"; echo "$(date +%T) $*" >> "$OUT/progress.txt"; }
 
 echo "== wine: $(wine --version)"
-wineboot -i >"$OUT/wineboot.log" 2>&1; wineserver -w
+note "wineboot start"
+timeout 600 wineboot -i >"$OUT/wineboot.log" 2>&1; note "wineboot exit=$?"
+timeout 120 wineserver -w; note "prefix ready"
 
 mkdir -p "$WINEPREFIX/drive_c/users/$USER/AppData/Roaming/Battle.net"
 echo '{"Client":{"HardwareAcceleration":"false","Streaming":{"StreamingEnabled":"false"},"GameLaunchWindowBehavior":"2"}}' \
@@ -19,14 +22,16 @@ curl -fsSL -o "$HOME/setup.exe" "https://downloader.battle.net/download/getInsta
 BNET="$WINEPREFIX/drive_c/Program Files (x86)/Battle.net/Battle.net.exe"
 echo "== installer (HODLL=${SETUP_HODLL:-libwow64fex.dll})"
 HODLL="${SETUP_HODLL:-libwow64fex.dll}" wine "$HOME/setup.exe" --lang=enUS >"$OUT/setup.log" 2>&1 &
-for i in $(seq 1 60); do [ -f "$BNET" ] && break; sleep 10; [ $((i % 6)) -eq 0 ] && shot "setup-$i"; done
+note "installer started"
+for i in $(seq 1 90); do [ -f "$BNET" ] && break; sleep 10; [ $((i % 6)) -eq 0 ] && { shot "setup-$i"; note "installer waiting ${i}0s"; }; done
+note "installer: Battle.net.exe present=$([ -f "$BNET" ] && echo yes || echo no)"
 sleep 30; shot setup-done
 wineserver -k; sleep 3
 [ -f "$BNET" ] || { echo "Battle.net not installed"; exit 1; }
 
 echo "== Battle.net (HODLL=${BNET_HODLL:-libwow64fex.dll}) args: ${BNET_ARGS:-}"
 HODLL="${BNET_HODLL:-libwow64fex.dll}" wine "$BNET" ${BNET_ARGS:-} >"$OUT/battlenet.log" 2>&1 &
-for t in 30 60 90 120 180; do sleep 30; [ $t -le 60 ] || sleep $((t - 60 > 30 ? 0 : 0)); shot "bnet-${t}s"; done
+for t in 30 60 90 120 150 180; do sleep 30; shot "bnet-${t}s"; note "battle.net ${t}s, processes: $(pgrep -fc Battle.net)"; done
 cp -r "$WINEPREFIX/drive_c/users/$USER/AppData/Local/Battle.net/Logs" "$OUT/bnet-logs" 2>/dev/null || true
 cp -r "$WINEPREFIX/drive_c/ProgramData/Battle.net/Agent/Agent."*/Logs "$OUT/agent-logs" 2>/dev/null || true
 wineserver -k
