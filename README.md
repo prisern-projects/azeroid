@@ -53,7 +53,8 @@ automate gameplay, but you use it at your own risk with your account.
 
 ## Credits
 
-Azeroid's code is MIT licensed. The emulation engine comes from the open-source
-[Winlator Bionic](https://github.com/StevenMXZ/Winlator-Ludashi) project (MIT), which in turn builds on Wine,
-FEX-Emu, Box64, DXVK, Mesa/Turnip and others. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+Azeroid is based on [WeHavePhones](https://github.com/ashmerra/wehavephones) by ashmerra (MIT), which builds on
+[Winlator LLM](https://github.com/FrontMage/winlator-llm) by FrontMage and [Winlator](https://github.com/brunodev85/winlator)
+by BrunoSX, with GE-Proton ARM64EC builds by [The412Banner](https://github.com/The412Banner/proton-wine), FEX-Emu,
+DXVK, Mesa Turnip and [ConsolePort](https://github.com/seblindfors/ConsolePort). See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 World of Warcraft and Battle.net are trademarks of Blizzard Entertainment. Azeroid is not affiliated with Blizzard.

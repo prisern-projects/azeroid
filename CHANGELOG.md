@@ -2,6 +2,15 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.2.0] - 2026-10-25
+
+- **New foundation.** Azeroid is now built on [WeHavePhones](https://github.com/ashmerra/wehavephones) (MIT) and
+  Winlator LLM. That stack already runs Battle.net and Blizzard's native ARM64 WoW client on Android phones,
+  including the S26 Ultra. It replaces the Ludashi-based engine of 0.1.x.
+- Keeps Azeroid's app id, signing key and update channel, so this installs over 0.1.x.
+- First start after updating removes 0.1.x's engine data once (no game files existed yet).
+- Next: performance work to make it smoother than WeHavePhones.
+
 ## [0.1.14] - 2026-10-25
 
 - Battle.net crashed under FEX 2610 (stack overflow inside FEX itself). Azeroid now builds FEX at revision
