@@ -54,8 +54,8 @@ jobs:
           tools/make_requests 2>/dev/null || true
           ./configure --prefix=/opt/wine --enable-archs=arm64ec,aarch64,i386 --with-mingw=clang \
             --disable-tests --without-gstreamer --without-sdl --without-ffmpeg 2>&1 | tee "$GITHUB_WORKSPACE/wine.log" | tail -30
-          make -j"$(nproc)" 2>&1 | tee -a "$GITHUB_WORKSPACE/wine.log" | grep -E "error|Error" | head -50 || true
-          test ${PIPESTATUS[0]} -eq 0
+          make -j"$(nproc)" >> "$GITHUB_WORKSPACE/wine.log" 2>&1; rc=$?
+          echo "make exit $rc"; test $rc -eq 0
           make install DESTDIR="$RUNNER_TEMP/out" >/dev/null 2>&1
 
       - name: Surface build errors
