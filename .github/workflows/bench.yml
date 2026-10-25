@@ -19,10 +19,19 @@ jobs:
   battlenet:
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 55
+    strategy:
+      fail-fast: false
+      matrix:
+        variant:
+          - { name: azeroid, args: '--disable-gpu --enable-features=NetworkServiceInProcess2' }
+          - { name: inprocgpu, args: '--in-process-gpu --enable-features=NetworkServiceInProcess2' }
+          - { name: swiftshader, args: '--disable-gpu --use-angle=swiftshader --enable-features=NetworkServiceInProcess2' }
+          - { name: nogpucomp, args: '--disable-gpu --disable-gpu-compositing --disable-software-rasterizer --enable-features=NetworkServiceInProcess2' }
+          - { name: d3d11, args: '--use-angle=d3d11 --enable-features=NetworkServiceInProcess2' }
     env:
       GH_TOKEN: ${{ github.token }}
       BNET_HODLL: ${{ inputs.bnet_hodll || 'libwow64fex.dll' }}
-      BNET_ARGS: ${{ inputs.bnet_args || '--disable-gpu --enable-features=NetworkServiceInProcess2' }}
+      BNET_ARGS: ${{ matrix.variant.args }}
       WINEDEBUG: ${{ inputs.winedebug || 'fixme-all' }}
     steps:
       - uses: actions/checkout@v4
@@ -31,7 +40,7 @@ jobs:
         run: |
           set -e
           sudo apt-get update -q
-          sudo apt-get install -yq xvfb imagemagick cabextract xdotool
+          sudo apt-get install -yq xvfb imagemagick cabextract xdotool mesa-vulkan-drivers libvulkan1 libegl1 libgl1 libgles2
           gh release list -R AndreRH/hangover -L 5
           tag=$(gh release list -R AndreRH/hangover -L 1 --exclude-pre-releases --json tagName -q '.[0].tagName')
           echo "hangover $tag"
