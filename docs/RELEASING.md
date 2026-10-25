@@ -1,20 +1,19 @@
 # Releasing a new version
 
 ```sh
-# 1. describe the change
+echo 0.2.0 > VERSION
 $EDITOR CHANGELOG.md        # add a "## [0.2.0] - YYYY-MM-DD" section at the top
 git commit -am "Release 0.2.0"
-# 2. tag and push. CI builds, signs and publishes the release
-git tag v0.2.0
-git push origin main v0.2.0
+git push origin main
 ```
 
-Within about 20 minutes the release appears under *Releases*. The phone's app shows *Update available* next time it's
-opened (or right away via *Check for updates*).
+CI sees a `VERSION` with no release yet, builds and signs the APK, then creates the tag `v0.2.0` and the
+GitHub Release with that changelog section as notes. In about 10 minutes the phone shows *Update available* next time
+Azeroid is opened (or right away via *Check for updates*).
 
-- Tags must be `vMAJOR.MINOR.PATCH`. `versionCode` is derived from it, so always go **up**.
-- Builds from branches and PRs are version `0.0.0`. They're downloadable from the Actions run for testing,
-  but the in-app updater never offers them.
+- `VERSION` must be `MAJOR.MINOR.PATCH`. `versionCode` is derived from it, so always go **up**.
+- Pushes that don't change `VERSION`, and all PR builds, produce test APKs (version `0.0.0`) in the Actions run.
+  The in-app updater never offers them.
 
 ## Signing key (one-time setup)
 
