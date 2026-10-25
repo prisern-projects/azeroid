@@ -50,8 +50,9 @@ jobs:
         run: |
           set -o pipefail
           cd "$RUNNER_TEMP/wine"
-          [ -x ./configure ] || ./autogen.sh 2>&1 | tail -5 || autoreconf -fi
-          tools/make_requests 2>/dev/null || true
+          # The committed configure is stale; regenerate like the upstream build does.
+          sudo apt-get install -yq autoconf automake >/dev/null
+          ./autogen.sh 2>&1 | tail -5
           ./configure --prefix=/opt/wine --enable-archs=arm64ec,aarch64,i386 --with-mingw=clang \
             --disable-tests --without-gstreamer --without-sdl --without-ffmpeg 2>&1 | tee "$GITHUB_WORKSPACE/wine.log" | tail -30
           make -j"$(nproc)" >> "$GITHUB_WORKSPACE/wine.log" 2>&1; rc=$?
