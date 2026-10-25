@@ -8,12 +8,13 @@ Native WoW Classic on the owner's **Samsung Galaxy S26 Ultra** (SM-S948B, Snapdr
 Adreno 840, Android 17), used as a handheld with a **GameSir G8 Galileo**. Priorities: ease of use and
 performance, and specifically **smoother than WeHavePhones**. Tuning targets this one device, not all of Android.
 
-## Current state (0.2.0)
+## Current state (0.2.2)
 
 - The app is **WeHavePhones** (MIT, ashmerra) rebranded as Azeroid. It's built on Winlator LLM (FrontMage).
   Upstream commit: `UPSTREAM.txt`. Package `com.azeroid.app`, so it installs over 0.1.x.
 - Runtime (from upstream): GE-Proton 10.0-34 ARM64EC (The412Banner), patched ntdll, FEX 2601-116,
-  Battle.net flags `--disable-gpu --enable-features=NetworkServiceInProcess2`, Adreno 840 → system driver.
+  Battle.net flags `--disable-gpu --enable-features=NetworkServiceInProcess2` plus Azeroid's
+  `--renderer-process-limit=1 --disable-site-isolation-trials --disable-gpu-shader-disk-cache` (0.2.2), Adreno 840 → system driver.
 - WoW runs Blizzard's **native ARM64 client** (`WowClassic-ARM64.exe`), with no x86 translation for the game.
 - Releases: bump `VERSION` and add a `CHANGELOG.md` section, then push to `main`. CI (`.github/workflows/build.yml`)
   builds, signs and publishes `v<VERSION>` with `Azeroid-<version>.apk`. The in-app updater
@@ -24,14 +25,25 @@ performance, and specifically **smoother than WeHavePhones**. Tuning targets thi
 
 ## Next work (in order)
 
-1. Owner confirms 0.2.0 installs, Battle.net signs in and WoW Classic downloads and launches.
+1. ~~Owner confirms install, sign-in and WoW Classic download~~ (done on 0.2.2). Next: confirm WoW launches.
 2. **Performance for the S26 Ultra**: frame-time logging (avg + 1% lows) first, then:
    GPU driver A/B (system vs newest Adreno 8xx Turnip), CPU affinity (2 prime cores for WoW main/render threads),
    DXVK async pipelines + persistent caches, sustained-performance/game mode, render resolution + sharpening,
-   drop low-RAM memory tweaks that cost speed, Battle.net exits on game launch.
+   only drop low-RAM tweaks that measurably cost speed (RAM is tight, see below), Battle.net exits on game launch.
 3. **Azeroid on-screen controller** replacing WeHavePhones' `VirtualGamepadController`: Xbox layout (twin sticks,
    D-pad, ABXY, bumpers, triggers), semi-transparent, thumb-sized for 6.9" landscape, *Auto* hides it when the
    G8 is connected, XInput so WoW gamepad mode and ConsolePort work.
+
+## Lessons from 0.2.x
+
+- The "Battle.net crashes while installing WoW" seen in WeHavePhones and in Azeroid 0.2.0 was Android's
+  low-memory killer, not a crash. Proof: `ApplicationExitInfo` showed `LOW_MEMORY` at importance 100 (foreground).
+  On the 12 GB S26 Ultra, Android itself uses about 8 GB, leaving about 3 GB plus swap. Wine logs show nothing
+  (WINEDEBUG=-all, SIGKILL).
+- Fixes: fewer CEF processes (flags above) and Samsung **RAM Plus** at maximum (Settings → Device care → Memory).
+  With both, the install finished.
+- Diagnostics now has "Last session end" (exit status, RAM and swap at exit) and "Android exit reasons"
+  (`SessionEndRecorder`). Check these first for any "it closed back to the app" report.
 
 ## Lessons from 0.1.x (Ludashi engine), so they aren't relearned
 
