@@ -1,0 +1,72 @@
+name: Native ARM64 components
+
+# Builds the pieces the native ARM64 WoW client needs and publishes them as a pre-release
+# ("native-<component>-<version>"). Pre-releases never show up in the in-app updater.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['native/**', '.github/workflows/native.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  dxvk-arm64:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Versions
+        run: cat native/versions.properties | grep -v '^#' >> "$GITHUB_ENV"
+
+      - name: Toolchain (llvm-mingw ${{ env.LLVM_MINGW }})
+        run: |
+          sudo apt-get update -q && sudo apt-get install -yq ninja-build glslang-tools
+          pip3 install --quiet meson
+          f="llvm-mingw-${LLVM_MINGW}-ucrt-ubuntu-22.04-x86_64.tar.xz"
+          curl -fsSL "https://github.com/mstorsjo/llvm-mingw/releases/download/${LLVM_MINGW}/$f" -o "$RUNNER_TEMP/$f"
+          tar -xf "$RUNNER_TEMP/$f" -C "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/${f%.tar.xz}/bin" >> "$GITHUB_PATH"
+
+      - name: DXVK source (${{ env.DXVK_REF }})
+        run: git clone --depth 1 --recursive --shallow-submodules -b "$DXVK_REF" https://github.com/doitsujin/dxvk.git "$RUNNER_TEMP/dxvk"
+
+      - name: Build for plain ARM64 (aarch64-w64-mingw32)
+        run: |
+          cd "$RUNNER_TEMP/dxvk"
+          meson setup --cross-file "$GITHUB_WORKSPACE/native/dxvk/cross-aarch64.txt" --buildtype release build
+          ninja -C build
+          mkdir -p "$RUNNER_TEMP/out/system32"
+          find build -name '*.dll' -exec cp {} "$RUNNER_TEMP/out/system32/" \;
+          ls -la "$RUNNER_TEMP/out/system32"
+
+      - name: Check machine type is ARM64 (0xAA64)
+        run: |
+          python3 - "$RUNNER_TEMP/out/system32" <<'PY'
+          import os, struct, sys
+          d = sys.argv[1]
+          for n in sorted(os.listdir(d)):
+              b = open(os.path.join(d, n), 'rb').read(4096)
+              pe = struct.unpack_from('<I', b, 0x3c)[0]
+              machine = struct.unpack_from('<H', b, pe + 4)[0]
+              print(n, hex(machine))
+              assert machine == 0xAA64, f"{n} is not plain ARM64"
+          PY
+
+      - name: Package
+        run: |
+          cd "$RUNNER_TEMP/out"
+          tar -cJf "$GITHUB_WORKSPACE/dxvk-arm64-${DXVK_REF}.tar.xz" system32
+          sha256sum "$GITHUB_WORKSPACE/dxvk-arm64-${DXVK_REF}.tar.xz" | tee "$GITHUB_WORKSPACE/dxvk-arm64-${DXVK_REF}.tar.xz.sha256"
+
+      - name: Publish pre-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="native-dxvk-arm64-${DXVK_REF}"
+          gh release view "$tag" >/dev/null 2>&1 && gh release delete "$tag" --yes --cleanup-tag
+          gh release create "$tag" dxvk-arm64-*.tar.xz* --prerelease --target "$GITHUB_SHA" \
+            --title "DXVK ${DXVK_REF} for plain ARM64 Windows" \
+            --notes "Upstream DXVK ${DXVK_REF}, cross-compiled with llvm-mingw ${LLVM_MINGW} for aarch64-w64-mingw32. For Blizzard's native ARM64 WoW client. Unmodified."
