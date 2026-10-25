@@ -17,7 +17,10 @@ class InstallResultReceiver : BroadcastReceiver() {
                 } else {
                     @Suppress("DEPRECATION") intent.getParcelableExtra(Intent.EXTRA_INTENT)
                 }
-                confirm?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)?.let(context::startActivity)
+                if (confirm != null) {
+                    confirm.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    context.startActivity(confirm)
+                }
             }
             PackageInstaller.STATUS_SUCCESS -> Unit // Android restarts the app on the new version.
             else -> {

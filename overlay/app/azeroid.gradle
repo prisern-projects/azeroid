@@ -3,7 +3,11 @@
 // Version comes from AZEROID_VERSION (set by CI from the git tag, e.g. "0.3.1").
 // versionCode is derived from it so every release installs over the previous one.
 def azeroidVersion = System.getenv("AZEROID_VERSION") ?: "0.0.0"
-def (vMajor, vMinor, vPatch) = azeroidVersion.tokenize('.').collect { it.replaceAll('[^0-9]', '') as int } + [0, 0, 0]
+def versionParts = azeroidVersion.tokenize('.').collect { part ->
+    def digits = part.replaceAll('[^0-9]', '')
+    digits ? digits.toInteger() : 0
+} + [0, 0, 0]
+def (vMajor, vMinor, vPatch) = versionParts
 
 android {
     defaultConfig {

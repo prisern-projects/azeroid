@@ -250,8 +250,8 @@ class AzeroidActivity : AppCompatActivity() {
 
     private fun hasGamepad(): Boolean = InputDevice.getDeviceIds().any { id ->
         val d = InputDevice.getDevice(id) ?: return@any false
-        !d.isVirtual && (d.sources and InputDevice.SOURCE_GAMEPAD == InputDevice.SOURCE_GAMEPAD ||
-            d.sources and InputDevice.SOURCE_JOYSTICK == InputDevice.SOURCE_JOYSTICK)
+        !d.isVirtual && ((d.sources and InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD ||
+            (d.sources and InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK)
     }
 
     private fun busy(text: String, progress: Float?) {
