@@ -97,6 +97,21 @@ jobs:
           cp "$apk" "dist/Azeroid-${{ steps.version.outputs.version }}.apk"
           sha256sum dist/*.apk
 
+      - name: Verify APK
+        run: |
+          apk="$(ls dist/*.apk)"
+          aapt2="$(ls "$ANDROID_HOME"/build-tools/*/aapt2 | sort -V | tail -1)"
+          badging="$("$aapt2" dump badging "$apk" | grep -E "^(package|launchable-activity|application-label):")"
+          echo "$badging"
+          echo "$badging" | grep -q "name='com.azeroid.app'"
+          echo "$badging" | grep -q "launchable-activity: name='com.azeroid.app.AzeroidActivity'"
+          unzip -p "$apk" 'classes*.dex' | grep -aq 'Lcom/azeroid/app/engine/Engine;'
+          if [ "${{ steps.version.outputs.release }}" = "true" ]; then
+            signer="$("$(dirname "$aapt2")/apksigner" verify --print-certs "$apk" | grep 'SHA-256')"
+            echo "$signer"
+          fi
+          echo "::notice title=APK::$(echo "$badging" | tr '\n' ' ') size=$(du -m "$apk" | cut -f1)MB"
+
       - uses: actions/upload-artifact@v4
         with:
           name: Azeroid-${{ steps.version.outputs.version }}-${{ github.run_number }}
