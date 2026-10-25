@@ -150,7 +150,7 @@ class AzeroidActivity : AppCompatActivity() {
     private fun installRuntime() {
         busy("Downloading the Windows runtime (${prefs.runtime.label}, ~130 MB)…", 0f)
         background({
-            if (!com.winlator.cmod.core.ProtonPackageManager.isInstalled(this, Engine.runtime(this))) {
+            if (!Engine.isWineInstalled(this)) {
                 check(Engine.installRuntime(this) { p -> runOnUiThread { state = state.copy(progress = p / 100f) } }) {
                     "Runtime download failed. Check your connection and try again."
                 }
@@ -195,7 +195,7 @@ class AzeroidActivity : AppCompatActivity() {
     fun openBattleNet() {
         val c = container ?: return refresh()
         background({ Wow.tuneBattleNet(c) }) {
-            launch(c, "Battle.net", Wow.BATTLE_NET_EXE, battleNet = true, gameNext = false)
+            launchBattleNet(c, gameNext = false)
         }
     }
 
@@ -212,10 +212,20 @@ class AzeroidActivity : AppCompatActivity() {
             Wow.tuneBattleNet(c)
         }) {
             when (prefs.launchMode) {
-                LaunchMode.BATTLE_NET -> launch(c, "World of Warcraft", Wow.BATTLE_NET_EXE, battleNet = true)
+                LaunchMode.BATTLE_NET -> launchBattleNet(c, gameNext = true)
                 LaunchMode.DIRECT -> launch(c, "World of Warcraft", install.windowsExe)
             }
         }
+    }
+
+    private fun launchBattleNet(c: Container, gameNext: Boolean) {
+        val direct = Wow.battleNetAppExists(c)
+        launch(
+            c, if (gameNext) "World of Warcraft" else "Battle.net",
+            if (direct) Wow.BATTLE_NET_APP_EXE else Wow.BATTLE_NET_EXE,
+            battleNet = true, gameNext = gameNext,
+            args = if (direct) Wow.BATTLE_NET_ARGS else "",
+        )
     }
 
     /**
@@ -229,6 +239,7 @@ class AzeroidActivity : AppCompatActivity() {
     private fun launch(
         c: Container, title: String, windowsExe: String, battleNet: Boolean = false, gameNext: Boolean = true,
         translator: BattleNetTranslator = prefs.bnetTranslator,
+        args: String = "",
     ) {
         val overlay = gameNext && when (prefs.overlay) {
             ControllerOverlay.AUTO -> !hasGamepad()
@@ -238,6 +249,7 @@ class AzeroidActivity : AppCompatActivity() {
         Engine.launch(this, c, Engine.LaunchSpec(
             title = title,
             windowsExe = windowsExe,
+            args = args,
             screenSize = prefs.graphics.screenSize,
             fpsCap = prefs.fpsCap,
             showFps = prefs.showFps,
@@ -245,7 +257,7 @@ class AzeroidActivity : AppCompatActivity() {
             fexPreset = if (battleNet) translator.fexPreset else prefs.emulation.fexPreset,
             emulator32 = if (battleNet) translator.emulator else null,
             box64Preset = if (battleNet) translator.box64Preset else null,
-            gpuDriverVersion = prefs.gpuDriver.engineVersion,
+            gpuDriverVersion = prefs.gpuDriver.engineVersion ?: Engine.autoGpuDriver(this),
             extraEnv = if (battleNet) mapOf(
                 "WINEDLLOVERRIDES" to "locationapi=d",
                 // Wine errors + crash reports (not fixme spam) into the session log, for "Share log".
@@ -256,7 +268,7 @@ class AzeroidActivity : AppCompatActivity() {
             gamepadToGame = gameNext,
         ))
         when {
-            battleNet && !gameNext -> toast("Tap to click. To type: swipe Back once → Show Keyboard")
+            battleNet && !gameNext -> toast("Battle.net can take 2–3 minutes to appear. Tap to click; to type: Back → Show Keyboard")
             battleNet -> toast("Use touch in Battle.net — the controller takes over once WoW starts")
         }
     }

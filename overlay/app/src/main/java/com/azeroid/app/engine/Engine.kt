@@ -70,8 +70,12 @@ object Engine {
         })
     }
 
-    fun isRuntimeInstalled(context: Context): Boolean =
-        ProtonPackageManager.isInstalled(context, runtime(context)) && isFexInstalled(context)
+    fun isRuntimeInstalled(context: Context): Boolean = isWineInstalled(context) && isFexInstalled(context)
+
+    fun isWineInstalled(context: Context): Boolean {
+        val rt = AzeroidPrefs(context).runtime
+        return if (rt.contentUrl != null) isContentInstalled(context, rt.id) else ProtonPackageManager.isInstalled(context, rt.id)
+    }
 
     private fun isFexInstalled(context: Context): Boolean {
         val contents = ContentsManager(context).apply { syncContents() }
@@ -80,12 +84,18 @@ object Engine {
     }
 
     /** Blocking. Downloads, verifies and installs FEX [FEX_VERSION] through the engine's content installer. */
-    fun installFex(context: Context, progress: (Int) -> Unit): Boolean {
-        if (isFexInstalled(context)) return true
-        val file = File(context.cacheDir, "fexcore-$FEX_VERSION.wcp")
+    fun installFex(context: Context, progress: (Int) -> Unit): Boolean =
+        isFexInstalled(context) || (installContentPackage(context, FEX_URL, FEX_SHA256, progress) && isFexInstalled(context))
+
+    private fun isContentInstalled(context: Context, entryName: String): Boolean =
+        ContentsManager(context).apply { syncContents() }.getProfileByEntryName(entryName) != null
+
+    /** Blocking. Downloads a .wcp, checks its SHA-256 and installs it with the engine's content installer. */
+    private fun installContentPackage(context: Context, url: String, sha256: String, progress: (Int) -> Unit): Boolean {
+        val file = File(context.cacheDir, "content-${sha256.take(12)}.wcp")
         try {
             val sha = MessageDigest.getInstance("SHA-256")
-            OkHttpClient().newCall(Request.Builder().url(FEX_URL).build()).execute().use { r ->
+            OkHttpClient().newCall(Request.Builder().url(url).build()).execute().use { r ->
                 if (!r.isSuccessful) return false
                 val body = r.body ?: return false
                 val total = body.contentLength()
@@ -102,8 +112,8 @@ object Engine {
                     }
                 }
             }
-            if (sha.digest().joinToString("") { "%02x".format(it) } != FEX_SHA256) {
-                Log.e(TAG, "FEX package checksum mismatch")
+            if (sha.digest().joinToString("") { "%02x".format(it) } != sha256) {
+                Log.e(TAG, "Checksum mismatch for $url")
                 return false
             }
             val contents = ContentsManager(context).apply { syncContents() }
@@ -112,7 +122,7 @@ object Engine {
             val finish = object : ContentsManager.OnInstallFinishedCallback {
                 override fun onFailed(reason: ContentsManager.InstallFailedReason, e: Exception?) {
                     ok = reason == ContentsManager.InstallFailedReason.ERROR_EXIST
-                    if (!ok) Log.e(TAG, "FEX install failed: $reason", e)
+                    if (!ok) Log.e(TAG, "Content install failed: $reason", e)
                     done.countDown()
                 }
                 override fun onSucceed(profile: ContentProfile) { ok = true; done.countDown() }
@@ -121,8 +131,8 @@ object Engine {
                 override fun onFailed(reason: ContentsManager.InstallFailedReason, e: Exception?) = finish.onFailed(reason, e)
                 override fun onSucceed(profile: ContentProfile) = contents.finishInstallContent(profile, finish)
             })
-            done.await(2, TimeUnit.MINUTES)
-            return ok && isFexInstalled(context)
+            done.await(5, TimeUnit.MINUTES)
+            return ok
         } finally {
             file.delete()
         }
@@ -130,7 +140,11 @@ object Engine {
 
     /** Blocking. Downloads (SHA-256 checked by the engine) and installs the selected runtime. */
     fun installRuntime(context: Context, progress: (Int) -> Unit): Boolean {
-        val id = runtime(context)
+        val rt = AzeroidPrefs(context).runtime
+        if (rt.contentUrl != null && rt.contentSha256 != null) {
+            return installContentPackage(context, rt.contentUrl, rt.contentSha256, progress) && isContentInstalled(context, rt.id)
+        }
+        val id = rt.id
         val pkg = ProtonPackageManager.getPackage(id) ?: return false
         val archive = File(context.cacheDir, pkg.fileName)
         try {
@@ -244,6 +258,16 @@ object Engine {
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         context.startActivity(intent)
     }
+
+    /**
+     * GPU driver when the user picked "Auto". Adreno 8xx (S26 Ultra: 840) gets Qualcomm's own driver: Turnip's
+     * Adreno 8xx support is young and draws glitches there.
+     */
+    fun autoGpuDriver(context: Context): String? = runCatching {
+        val renderer = com.winlator.cmod.core.GPUInformation.getRenderer(null, context) ?: ""
+        val model = Regex("""Adreno[^0-9]*(\d{3})""").find(renderer)?.groupValues?.get(1)?.toIntOrNull() ?: 0
+        if (model >= 800) "System" else null
+    }.getOrNull()
 
     /** Opens the full engine UI (containers, drivers, controls editor) for troubleshooting. */
     fun openEngineTools(context: Context) {

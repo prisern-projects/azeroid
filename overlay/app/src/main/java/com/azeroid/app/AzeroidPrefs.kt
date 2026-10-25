@@ -40,7 +40,20 @@ enum class BattleNetTranslator(val label: String, val emulator: String, val fexP
 }
 
 /** Wine runtime of the WoW environment; each one gets its own environment. */
-enum class Runtime(val label: String, val id: String) {
+enum class Runtime(
+    val label: String,
+    /** Container wineVersion: a ProtonPackageManager id, or an engine content entry name. */
+    val id: String,
+    /** Set for runtimes installed as engine content packages (.wcp), pinned by SHA-256. */
+    val contentUrl: String? = null,
+    val contentSha256: String? = null,
+) {
+    // The412Banner's GE-Proton 10.0-34 ARM64EC build (Android fixes + Battle.net game-fix).
+    GE_PROTON_10(
+        "GE-Proton 10 (recommended)", "Proton-10.0-34-arm64ec-7",
+        "https://github.com/The412Banner/proton-wine/releases/download/build-bionic-layers-20260911-xp/GE-proton-10.0-34-arm64ec.wcp",
+        "50344ec9fa1f37ae22f5b1a5d509cb50cac818fe15f0ecc4fd187e8f97969110",
+    ),
     PROTON_10("Proton 10", "proton-10.0-5-arm64ec"),
     PROTON_11("Proton 11", "proton-11.0-1-arm64ec"),
 }
@@ -76,12 +89,13 @@ class AzeroidPrefs(context: Context) {
 
     var bnetTranslator: BattleNetTranslator
         // Key renamed in 0.1.8 so everyone moves to the new default (Box64 breaks the sign-in page's TLS).
-        get() = enumOr(sp.getString("bnetTranslator2", null), BattleNetTranslator.FEX_SAFE)
-        set(v) = sp.edit().putString("bnetTranslator2", v.name).apply()
+        get() = enumOr(sp.getString("bnetTranslator3", null), BattleNetTranslator.FEX_SAFE)
+        set(v) = sp.edit().putString("bnetTranslator3", v.name).apply()
 
     var runtime: Runtime
-        get() = enumOr(sp.getString("runtime", null), Runtime.PROTON_10)
-        set(v) = sp.edit().putString("runtime", v.name).apply()
+        // Key renamed in 0.1.13 so everyone moves to GE-Proton 10.
+        get() = enumOr(sp.getString("runtime2", null), Runtime.GE_PROTON_10)
+        set(v) = sp.edit().putString("runtime2", v.name).apply()
 
     /** Extra Wine tracing (network, connectivity, TLS) for bug reports. Makes things slower. */
     var detailedLogs: Boolean

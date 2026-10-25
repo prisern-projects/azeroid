@@ -7,6 +7,7 @@ pinned versions in `engine.properties`.
 |---|---|---|
 | Winlator Bionic (Ludashi fork) | MIT, © 2023 BrunoSX and contributors | https://github.com/StevenMXZ/Winlator-Ludashi |
 | Winlator Bionic | MIT | https://github.com/Pipetto-crypto/winlator |
+| GE-Proton 10 ARM64EC build (The412Banner) | LGPL-2.1+ | https://github.com/The412Banner/proton-wine |
 | Wine / Proton | LGPL-2.1+ | https://www.winehq.org, https://github.com/ValveSoftware/Proton |
 | FEX-Emu | MIT | https://github.com/FEX-Emu/FEX |
 | Box64 | MIT | https://github.com/ptitSeb/box64 |

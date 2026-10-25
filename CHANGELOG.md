@@ -2,6 +2,17 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.1.13] - 2026-10-25
+
+- **New default runtime: GE-Proton 10.0-34 ARM64EC** ([The412Banner/proton-wine](https://github.com/The412Banner/proton-wine),
+  pinned + SHA-256 checked). It carries Android fixes and a Battle.net game-fix. Proton 11 can't render Battle.net's
+  browser at all, and the Proton 10.0-5 package froze it.
+- Battle.net now starts directly with `--disable-gpu --enable-features=NetworkServiceInProcess2`:
+  Chromium's separate network process crashes under Wine on Android, so the page never loaded.
+- GPU driver "Auto" now picks Qualcomm's own driver on Adreno 8xx (S26 Ultra), because Turnip draws glitches there.
+- Battle.net translator reset to FEX safe (multiblock off).
+- Battle.net's first start can take 2–3 minutes and may show an empty window for the first minute.
+
 ## [0.1.12] - 2026-10-25
 
 - *Advanced → Detailed logs*: traces Wine's network, connectivity and TLS layers in Battle.net sessions,

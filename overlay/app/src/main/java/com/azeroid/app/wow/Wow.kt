@@ -30,6 +30,17 @@ object Wow {
 
     const val BATTLE_NET_EXE = "C:\\Program Files (x86)\\Battle.net\\Battle.net Launcher.exe"
 
+    /** Battle.net itself, started directly so it gets our Chromium flags. */
+    const val BATTLE_NET_APP_EXE = "C:\\Program Files (x86)\\Battle.net\\Battle.net.exe"
+
+    /**
+     * No GPU process (it can't work through Wine's wow64 graphics path), and Chromium's network service inside the
+     * main process: as a separate utility process it crashes under Wine on Android and the page never loads.
+     */
+    const val BATTLE_NET_ARGS = "--disable-gpu --enable-features=NetworkServiceInProcess2"
+
+    fun battleNetAppExists(container: Container): Boolean = File(Engine.driveC(container, BNET_DIR), "Battle.net.exe").isFile
+
     fun installerFile(container: Container): File =
         File(Engine.windowsUserDir(container), "Downloads/Battle.net-Setup.exe")
 
