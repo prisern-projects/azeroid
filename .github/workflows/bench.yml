@@ -63,7 +63,8 @@ jobs:
         run: |
           mkdir -p bench-out && cp bench-out-console.log bench-out/ 2>/dev/null || true
           tar -czf bench-results.tar.gz bench-out
-          gh release delete bench-latest --yes --cleanup-tag 2>/dev/null || true
+          tag="bench-${{ matrix.variant.name }}"
+          gh release delete "$tag" --yes --cleanup-tag 2>/dev/null || true
           tail -40 bench-out/progress.txt bench-out-console.log 2>/dev/null | python3 -c 'import sys; print("::notice title=bench console::" + sys.stdin.read()[-20000:].replace("%","%25").replace("\n","%0A"))'
-          gh release create bench-latest bench-results.tar.gz --prerelease --target "$GITHUB_SHA" \
-            --title "Battle.net bench (latest run)" --notes "HODLL=$BNET_HODLL ARGS=$BNET_ARGS WINEDEBUG=$WINEDEBUG"
+          gh release create "$tag" bench-results.tar.gz --prerelease --target "$GITHUB_SHA" \
+            --title "Battle.net bench: ${{ matrix.variant.name }}" --notes "HODLL=$BNET_HODLL ARGS=$BNET_ARGS WINEDEBUG=$WINEDEBUG"
