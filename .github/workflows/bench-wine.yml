@@ -68,6 +68,7 @@ jobs:
         run: |
           annotate() { python3 -c 'import sys; t=sys.stdin.read()[-30000:]; print("::error title=%s::" % sys.argv[1] + t.replace("%","%25").replace("\r","").replace("\n","%0A"))' "$1"; }
           grep -E 'fatal error|error:|configure: error' wine.log | sort -u | head -150 | annotate "wine errors" || true
+          grep -E -B12 'collect2|undefined reference|ld returned' wine.log | grep -vE '^\s+-' | head -120 | annotate "link errors" || true
           tail -60 wine.log | annotate "wine tail" || true
 
       - name: Publish
