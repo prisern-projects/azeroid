@@ -13,7 +13,10 @@ echo "== wine: $(wine --version)"
 note "wineboot start"
 # No Mono/Gecko prompts: they block wineboot on a dialog nobody can click.
 WINEDLLOVERRIDES="mscoree=d;mshtml=d" timeout 600 wineboot -i >"$OUT/wineboot.log" 2>&1; note "wineboot exit=$? kernel32(32-bit)=$([ -f "$WINEPREFIX/drive_c/windows/syswow64/kernel32.dll" ] && echo yes || echo no)"
-timeout 120 wineserver -w; note "prefix ready"
+timeout 120 wineserver -w
+# Crashes print a backtrace to the log instead of opening a dialog.
+wine reg add 'HKCU\Software\Wine\WineDbg' /v ShowCrashDialog /t REG_DWORD /d 0 /f >/dev/null 2>&1
+note "prefix ready"
 
 mkdir -p "$WINEPREFIX/drive_c/users/$USER/AppData/Roaming/Battle.net"
 echo '{"Client":{"HardwareAcceleration":"false","Streaming":{"StreamingEnabled":"false"},"GameLaunchWindowBehavior":"2"}}' \
@@ -35,7 +38,10 @@ wineserver -k; sleep 3
 
 echo "== Battle.net (HODLL=${BNET_HODLL:-libwow64fex.dll}) args: ${BNET_ARGS:-}"
 HODLL="${BNET_HODLL:-libwow64fex.dll}" wine "$BNET" ${BNET_ARGS:-} >"$OUT/battlenet.log" 2>&1 &
-for t in 30 60 90 120 150 180; do sleep 30; shot "bnet-${t}s"; note "battle.net ${t}s, processes: $(pgrep -fc Battle.net)"; done
+for t in 30 60 90 120 150 180; do sleep 30; shot "bnet-${t}s"; note "battle.net ${t}s, processes: $(pgrep -fc Battle.net)"
+  [ $t -eq 30 ] && ps -eo pid,args | grep -iE 'battle|agent' | grep -v grep | cut -c1-300 > "$OUT/processes-30s.txt"
+  [ $t -eq 120 ] && ps -eo pid,args | grep -iE 'battle|agent' | grep -v grep | cut -c1-300 > "$OUT/processes-120s.txt"
+done
 cp -r "$WINEPREFIX/drive_c/users/$USER/AppData/Local/Battle.net/Logs" "$OUT/bnet-logs" 2>/dev/null || true
 cp -r "$WINEPREFIX/drive_c/ProgramData/Battle.net/Agent/Agent."*/Logs "$OUT/agent-logs" 2>/dev/null || true
 wineserver -k

@@ -24,10 +24,6 @@ jobs:
       matrix:
         variant:
           - { name: azeroid, args: '--disable-gpu --enable-features=NetworkServiceInProcess2' }
-          - { name: inprocgpu, args: '--in-process-gpu --enable-features=NetworkServiceInProcess2' }
-          - { name: swiftshader, args: '--disable-gpu --use-angle=swiftshader --enable-features=NetworkServiceInProcess2' }
-          - { name: nogpucomp, args: '--disable-gpu --disable-gpu-compositing --disable-software-rasterizer --enable-features=NetworkServiceInProcess2' }
-          - { name: d3d11, args: '--use-angle=d3d11 --enable-features=NetworkServiceInProcess2' }
     env:
       GH_TOKEN: ${{ github.token }}
       BNET_HODLL: ${{ inputs.bnet_hodll || 'libwow64fex.dll' }}
