@@ -24,7 +24,7 @@ object Diagnostics {
         appendLine("SoC: ${if (Build.VERSION.SDK_INT >= 31) Build.SOC_MODEL else Build.HARDWARE}")
         val prefs = AzeroidPrefs(context)
         appendLine("Settings: graphics=${prefs.graphics} gpu=${prefs.gpuDriver} emulation=${prefs.emulation} " +
-            "launch=${prefs.launchMode} overlay=${prefs.overlay} fpsCap=${prefs.fpsCap}")
+            "launch=${prefs.launchMode} overlay=${prefs.overlay} fpsCap=${prefs.fpsCap} bnet=${prefs.bnetTranslator}")
     }
 
     private fun recentLog(): String = runCatching {
@@ -41,6 +41,21 @@ object Diagnostics {
             ?: "(no engine logs yet)"
     }.getOrElse { "(engine logs unavailable: ${it.message})" }
 
+    /** Battle.net's and its Agent's own log files from inside the Windows environment (newest first). */
+    private fun battleNetLogs(context: Context): String = runCatching {
+        val c = Engine.findContainer(context) ?: return "(no WoW environment yet)"
+        val dirs = listOf(
+            Engine.driveC(c, "ProgramData/Battle.net/Agent"),
+            Engine.driveC(c, "ProgramData/Battle.net/Setup"),
+            File(Engine.windowsUserDir(c), "AppData/Local/Battle.net/Logs"),
+        )
+        dirs.flatMap { d -> d.walkTopDown().maxDepth(3).filter { it.isFile && it.extension in setOf("log", "txt") }.toList() }
+            .sortedByDescending { it.lastModified() }
+            .take(6)
+            .joinToString("\n") { f -> "----- ${f.path.substringAfter("drive_c/")} -----\n" + f.readText().takeLast(80_000) }
+            .ifEmpty { "(no Battle.net logs found)" }
+    }.getOrElse { "(Battle.net logs unavailable: ${it.message})" }
+
     /** Writes one report file to Azeroid/logs on the phone's storage and opens the share sheet for it. */
     fun shareLogs(context: Context) {
         val stamp = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US).format(Date())
@@ -48,6 +63,7 @@ object Diagnostics {
         val report = File(dir, "azeroid-log-$stamp.txt")
         report.writeText(
             deviceSummary(context) +
+                "\n===== Battle.net logs =====\n" + battleNetLogs(context) +
                 "\n===== engine sessions =====\n" + engineLogs(context) +
                 "\n===== app log =====\n" + recentLog()
         )

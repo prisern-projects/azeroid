@@ -27,6 +27,16 @@ enum class EmulationMode(val label: String, val fexPreset: String) {
     FAST("Fast", "INTERMEDIATE"),
 }
 
+/**
+ * How Battle.net's 32-bit programs (Battle.net.exe, Agent.exe) are translated to ARM.
+ * Battle.net is picky under emulation, so this is separate from the game's setting.
+ */
+enum class BattleNetTranslator(val label: String, val emulator: String, val fexPreset: String, val box64Preset: String) {
+    BOX64("Box64", "Box64", "COMPATIBILITY", "COMPATIBILITY"),
+    FEX_SAFE("FEX safe", "FEXCore", "COMPATIBILITY", "COMPATIBILITY"),
+    FEX_FAST("FEX fast", "FEXCore", "INTERMEDIATE", "COMPATIBILITY"),
+}
+
 enum class LaunchMode(val label: String) {
     BATTLE_NET("Through Battle.net"),
     DIRECT("Start WoW directly"),
@@ -55,6 +65,10 @@ class AzeroidPrefs(context: Context) {
     var launchMode: LaunchMode
         get() = enumOr(sp.getString("launch", null), LaunchMode.BATTLE_NET)
         set(v) = sp.edit().putString("launch", v.name).apply()
+
+    var bnetTranslator: BattleNetTranslator
+        get() = enumOr(sp.getString("bnetTranslator", null), BattleNetTranslator.BOX64)
+        set(v) = sp.edit().putString("bnetTranslator", v.name).apply()
 
     var showFps: Boolean
         get() = sp.getBoolean("fps", false)

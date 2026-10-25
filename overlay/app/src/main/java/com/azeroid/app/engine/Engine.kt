@@ -109,6 +109,9 @@ object Engine {
         val showFps: Boolean,
         val onScreenController: Boolean,
         val fexPreset: String,
+        /** "FEXCore" or "Box64": which translator runs 32-bit programs. Null = container default (FEX). */
+        val emulator32: String? = null,
+        val box64Preset: String? = null,
         val gpuDriverVersion: String?,
         val extraEnv: Map<String, String> = emptyMap(),
         /** A tap clicks exactly where the finger is (instead of laptop-touchpad style). */
@@ -159,6 +162,8 @@ object Engine {
             "envVars" to launchEnv(spec),
         )
         if (spec.args.isNotBlank()) extras["execArgs"] = spec.args
+        spec.emulator32?.let { extras["emulator"] = it }
+        spec.box64Preset?.let { extras["box64Preset"] = it }
         if (spec.directTouch) extras["simTouchScreen"] = "1"
         extras["disableXinput"] = if (spec.gamepadToGame) "0" else "1"
         if (spec.onScreenController) extras["controlsProfile"] = VIRTUAL_GAMEPAD_PROFILE_ID.toString()

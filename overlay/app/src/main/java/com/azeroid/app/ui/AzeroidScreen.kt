@@ -47,6 +47,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.azeroid.app.AzeroidActivity
+import com.azeroid.app.BattleNetTranslator
 import com.azeroid.app.ControllerOverlay
 import com.azeroid.app.Diagnostics
 import com.azeroid.app.EmulationMode
@@ -278,6 +279,9 @@ private fun AdvancedDialog(activity: AzeroidActivity, onClose: () -> Unit) {
 
                 Label("x86 emulation — Fast is quicker but may crash")
                 Choices(EmulationMode.entries, prefs.emulation, { it.label }) { prefs.emulation = it; activity.settingsChanged() }
+
+                Label("Battle.net translator — if Battle.net loops or freezes, try another one")
+                Choices(BattleNetTranslator.entries, prefs.bnetTranslator, { it.label }) { prefs.bnetTranslator = it; activity.settingsChanged() }
 
                 Label("Play button")
                 Choices(LaunchMode.entries, prefs.launchMode, { it.label }) { prefs.launchMode = it; activity.settingsChanged() }

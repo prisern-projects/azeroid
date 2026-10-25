@@ -211,7 +211,9 @@ class AzeroidActivity : AppCompatActivity() {
             fpsCap = prefs.fpsCap,
             showFps = prefs.showFps,
             onScreenController = overlay,
-            fexPreset = if (battleNet) EmulationMode.STABLE.fexPreset else prefs.emulation.fexPreset,
+            fexPreset = if (battleNet) prefs.bnetTranslator.fexPreset else prefs.emulation.fexPreset,
+            emulator32 = if (battleNet) prefs.bnetTranslator.emulator else null,
+            box64Preset = if (battleNet) prefs.bnetTranslator.box64Preset else null,
             gpuDriverVersion = prefs.gpuDriver.engineVersion,
             extraEnv = if (battleNet) mapOf(
                 "WINEDLLOVERRIDES" to "locationapi=d",

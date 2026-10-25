@@ -2,6 +2,12 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.1.5] - 2026-10-25
+
+- New: *Advanced → Battle.net translator* (Box64 / FEX safe / FEX fast). Battle.net and its Agent are
+  32-bit programs. If Battle.net loops or freezes, try another translator. Box64 is the new default.
+- Share log now also includes Battle.net's and its Agent's own log files from inside the Windows environment.
+
 ## [0.1.4] - 2026-10-25
 
 - Battle.net sessions now record Wine's error messages and crash reports in the session log.

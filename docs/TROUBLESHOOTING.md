@@ -16,6 +16,10 @@ Battle.net's own controller support crashes under Wine. Use **touch** in Battle.
 directly. Azeroid keeps controller input away from Battle.net when you install it or open it.
 When you press **PLAY**, the controller is connected for WoW, so don't press controller buttons until the game window is up.
 
+## Battle.net sign-in page loops / goes black
+Battle.net's background Agent keeps restarting. Try *Advanced → Battle.net translator*: Box64, then FEX safe,
+then FEX fast. Open Battle.net again after each change.
+
 ## Battle.net is a white/black window or crashes
 - Azeroid turns Battle.net's hardware acceleration off automatically. Close it and open it again once.
 - If it never draws: *Advanced → Play button → Start WoW directly* and log in from the game's own login screen.
