@@ -111,6 +111,10 @@ object Engine {
         val fexPreset: String,
         val gpuDriverVersion: String?,
         val extraEnv: Map<String, String> = emptyMap(),
+        /** A tap clicks exactly where the finger is (instead of laptop-touchpad style). */
+        val directTouch: Boolean = true,
+        /** Keep gamepads away from the Windows program entirely. */
+        val gamepadToGame: Boolean = true,
     )
 
     fun launch(context: Context, container: Container, spec: LaunchSpec) {
@@ -155,6 +159,8 @@ object Engine {
             "envVars" to launchEnv(spec),
         )
         if (spec.args.isNotBlank()) extras["execArgs"] = spec.args
+        if (spec.directTouch) extras["simTouchScreen"] = "1"
+        extras["disableXinput"] = if (spec.gamepadToGame) "0" else "1"
         if (spec.onScreenController) extras["controlsProfile"] = VIRTUAL_GAMEPAD_PROFILE_ID.toString()
         spec.gpuDriverVersion?.let { version ->
             val config = GraphicsDriverConfigDialog.parseGraphicsDriverConfig(container.getGraphicsDriverConfig())

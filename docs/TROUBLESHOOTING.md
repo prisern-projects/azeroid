@@ -11,6 +11,11 @@ Please include what you pressed and what you saw.
 ## How do I type (log in) without a keyboard?
 Swipe **Back** once while Battle.net or the game is showing → side menu → **Show Keyboard**.
 
+## Battle.net crashes when I use the controller
+Battle.net's own controller support crashes under Wine. Use **touch** in Battle.net: tap fields and buttons
+directly. Azeroid keeps controller input away from Battle.net when you install it or open it.
+When you press **PLAY**, the controller is connected for WoW, so don't press controller buttons until the game window is up.
+
 ## Battle.net is a white/black window or crashes
 - Azeroid turns Battle.net's hardware acceleration off automatically. Close it and open it again once.
 - If it never draws: *Advanced → Play button → Start WoW directly* and log in from the game's own login screen.

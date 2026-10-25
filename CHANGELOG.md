@@ -2,6 +2,13 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.1.2] - 2026-10-25
+
+- Battle.net is now operated by touch: a tap clicks exactly where your finger is (email box, buttons, …).
+- Installing Battle.net and "Open Battle.net" no longer show the on-screen controller and no longer pass
+  controller input to Battle.net. Its controller handling crashed under Wine (e.g. D-pad on the sign-in page).
+- WoW sessions keep full controller support, and taps click directly there too.
+
 ## [0.1.1] - 2026-10-25
 
 - Battle.net stability: Battle.net (and its installer) now always run with full x86 memory-ordering

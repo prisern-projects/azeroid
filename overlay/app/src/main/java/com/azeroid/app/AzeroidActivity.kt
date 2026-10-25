@@ -160,14 +160,14 @@ class AzeroidActivity : AppCompatActivity() {
             Wow.downloadInstaller(c) { p -> runOnUiThread { state = state.copy(progress = p) } }
             Wow.tuneBattleNet(c)
         }) {
-            launch(c, "Battle.net Setup", Wow.installerWindowsPath(), battleNet = true)
+            launch(c, "Battle.net Setup", Wow.installerWindowsPath(), battleNet = true, gameNext = false)
         }
     }
 
     fun openBattleNet() {
         val c = container ?: return refresh()
         background({ Wow.tuneBattleNet(c) }) {
-            launch(c, "Battle.net", Wow.BATTLE_NET_EXE, battleNet = true)
+            launch(c, "Battle.net", Wow.BATTLE_NET_EXE, battleNet = true, gameNext = false)
         }
     }
 
@@ -194,8 +194,12 @@ class AzeroidActivity : AppCompatActivity() {
      * [battleNet] = the session starts in Battle.net (or its installer). That's a multi-process Chromium app,
      * which needs full x86 memory-ordering emulation and no Windows location API to stay up under Wine.
      */
-    private fun launch(c: Container, title: String, windowsExe: String, battleNet: Boolean = false) {
-        val overlay = when (prefs.overlay) {
+    /**
+     * [gameNext] = WoW will run in this session. Pure Battle.net sessions (install, log in, patch) get
+     * touch only: Battle.net's own controller handling crashes under Wine, and the overlay would cover its UI.
+     */
+    private fun launch(c: Container, title: String, windowsExe: String, battleNet: Boolean = false, gameNext: Boolean = true) {
+        val overlay = gameNext && when (prefs.overlay) {
             ControllerOverlay.AUTO -> !hasGamepad()
             ControllerOverlay.ON -> true
             ControllerOverlay.OFF -> false
@@ -210,8 +214,12 @@ class AzeroidActivity : AppCompatActivity() {
             fexPreset = if (battleNet) EmulationMode.STABLE.fexPreset else prefs.emulation.fexPreset,
             gpuDriverVersion = prefs.gpuDriver.engineVersion,
             extraEnv = if (battleNet) mapOf("WINEDLLOVERRIDES" to "locationapi=d") else emptyMap(),
+            gamepadToGame = gameNext,
         ))
-        if (battleNet) toast("Tip: to type, swipe Back once → Show Keyboard")
+        when {
+            battleNet && !gameNext -> toast("Tap to click. To type: swipe Back once → Show Keyboard")
+            battleNet -> toast("Use touch in Battle.net — the controller takes over once WoW starts")
+        }
     }
 
     fun openEngineTools() = Engine.openEngineTools(this)
