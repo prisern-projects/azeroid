@@ -37,9 +37,12 @@ The fetcher takes each asset from the first place whose bytes match:
 
 The default DXVK's aarch64 DLLs (its `system32/`) were built with per-frame
 `SWAPTRACE` debug logging. The app extracts
-`dxwrapper/aarch64/dxvk-2.3.1.tzst` over them: a clean DXVK v2.3.1 build,
-tracked in git and made with
-`scripts/build-arm-graphics-dlls-docker.sh --skip-vkd3d --package-dxvk`.
+`dxwrapper/aarch64/dxvk-2.3.1.tzst` over them: a clean DXVK v2.3.1 build with
+the pinned dxvk-gplasync 2.3.1-1 patch (async pipeline compilation, since the
+Adreno system driver has no graphics pipeline libraries). It is tracked in git,
+made with `scripts/build-arm-graphics-dlls-docker.sh --skip-vkd3d --gplasync --package-dxvk`,
+and built in CI by `.github/workflows/dxvk-aarch64.yml`, which publishes it to the
+`dxvk-aarch64-2.3.1-gplasync` pre-release.
 
 ## Commands
 

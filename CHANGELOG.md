@@ -2,6 +2,14 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.2.12] - 2026-10-26
+
+- **Fewer hitches (test build).** WoW's DXVK is now v2.3.1 with the dxvk-gplasync patch. The phone's driver
+  can't build shaders ahead of time (DXVK logged "Graphics pipeline libraries not supported"), so every new
+  effect, model or spell stalled the frame while its shader compiled: the 100–700 ms hitches. Shaders now
+  compile on background threads. The trade-off: something new may be invisible for a moment the first time
+  it appears, instead of freezing the game. Compiled shaders are cached as before.
+
 ## [0.2.11] - 2026-10-26
 
 - **Faster Play.** Battle.net ignores Play clicks until its page has rendered. Azeroid waited 10 s after each
