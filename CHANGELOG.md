@@ -2,6 +2,13 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.3.3] - 2026-10-26
+
+- **On-screen controller moved out of the way.** The game is 16:9 on a wider screen, so there are black bars
+  at both sides. LT/LB, RT/RB, View/Menu and LS/RS now sit in those bars. The left stick, D-pad, camera pad and
+  ABXY hug the screen edges and are a bit smaller. The minimap, unit frames, chat and WoW's own gamepad action
+  bar are no longer covered.
+
 ## [0.3.2] - 2026-10-26
 
 - **Fixed: game drawn small in the top-left corner and locked to 60 FPS.** Samsung's game optimiser was
