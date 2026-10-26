@@ -361,7 +361,6 @@
     <string name="wehavephones_settings_diagnostics_title">Diagnostics</string>
     <string name="wehavephones_settings_performance_overlay">Show performance overlay</string>
     <string name="azeroid_menu_paste">Paste into game</string>
-    <string name="azeroid_menu_type">Type clipboard into game (slower, always works)</string>
     <string name="azeroid_settings_native_textures">Let the graphics driver decode textures itself (faster; turn off if textures look broken)</string>
     <string name="azeroid_settings_prime_cores">Run WoW\'s main threads on the fastest cores</string>
     <string name="wehavephones_settings_performance_overlay_hint">Takes effect the next time the game starts.</string>

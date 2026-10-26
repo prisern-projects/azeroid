@@ -2,6 +2,12 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.3.11] - 2026-10-26
+
+- **Removed the on-screen PASTE and TYPE buttons.** TYPE flooded the game with key presses and made the phone
+  lag and run hot. PASTE still did not deliver the text. *Paste into game* stays in the in-game menu (with
+  `clipboard.log`) until the clipboard route is fixed properly.
+
 ## [0.3.10] - 2026-10-26
 
 - **TYPE button** (on-screen controller, next to PASTE; also in the in-game menu as *Type clipboard into game*).
