@@ -63,6 +63,8 @@ performance, and specifically **smoother than WeHavePhones**. Tuning targets thi
   pipeline libraries not supported"**. So new shaders compile on the render thread, the likely source of the
   100–500 ms hitches. Candidate fix: a DXVK build with async/GPL that works on this driver.
 - The wrapper's WRAPPER_LOG_FILE produced no file on the S26 Ultra (0.2.8). Use DXVK's own log in wine.log instead.
+- **Native BCn (WRAPPER_EMULATE_BCN=0, ENABLE_BCN_COMPUTE=0) on the system driver:** renders correctly. Back-to-back
+  Stormwind at 720p: avg 48 / 1% lows 36 vs emulated 36–39 / 22–24. Default since 0.2.10.
 - **Don't request a display mode or frame rate** (`preferredDisplayModeId`, `Surface.setFrameRate`) on the
   S26 Ultra. In 0.2.4 it switched the panel resolution and the X-server output ended up small in the corner at
   60 FPS. Reverted in 0.2.5. 120 Hz comes from Samsung's Motion smoothness = Adaptive.

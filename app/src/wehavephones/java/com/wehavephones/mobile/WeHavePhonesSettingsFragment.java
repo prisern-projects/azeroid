@@ -71,7 +71,7 @@ public class WeHavePhonesSettingsFragment extends Fragment {
 
         CheckBox nativeTextures = view.findViewById(R.id.CBNativeTextures);
         final android.content.SharedPreferences defaults = androidx.preference.PreferenceManager.getDefaultSharedPreferences(activity);
-        nativeTextures.setChecked(defaults.getBoolean("azeroid_native_bcn", false));
+        nativeTextures.setChecked(defaults.getBoolean("azeroid_native_bcn", true));
         nativeTextures.setOnCheckedChangeListener((button, checked) -> {
             defaults.edit().putBoolean("azeroid_native_bcn", checked).apply();
             activity.updateStageStatus(getString(R.string.wehavephones_settings_saved), false);

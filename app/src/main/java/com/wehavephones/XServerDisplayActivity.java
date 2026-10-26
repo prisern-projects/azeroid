@@ -1419,8 +1419,8 @@ import java.util.concurrent.Executors;
 
             // BCN emulation (vanilla defaults).
             // Azeroid experiment: let the driver decode WoW's BCn textures itself instead of the
-            // wrapper's compute emulation. Settings toggle; off by default until measured.
-            boolean nativeBcn = preferences.getBoolean("azeroid_native_bcn", false);
+            // wrapper's compute emulation. On by default: Stormwind A/B on the S26 Ultra gave about +30% FPS.
+            boolean nativeBcn = preferences.getBoolean("azeroid_native_bcn", true);
             if (nativeBcn) {
                 envVars.put("WRAPPER_EMULATE_BCN", "0");
                 envVars.put("ENABLE_BCN_COMPUTE", "0");

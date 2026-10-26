@@ -2,6 +2,13 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.2.10] - 2026-10-26
+
+- **Native texture decoding is now the default.** Back-to-back test in Stormwind (same crowd, 1280x720):
+  driver decoding gave **48 FPS average and 36 FPS 1% lows**, against 36–39 FPS and 22–24 FPS with emulation.
+  That is about +25–30% average and +50% lows, and the tester saw less tearing. Textures render correctly.
+  The switch in Settings stays, in case a driver update breaks it.
+
 ## [0.2.9] - 2026-10-26
 
 - **Experiment: native texture decoding.** WoW's DXVK log shows the driver path reports BC texture support.
