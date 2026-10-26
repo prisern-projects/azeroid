@@ -137,6 +137,7 @@ public class PresentExtension implements Extension {
         Drawable content = window.getContent();
         if (content.visual.depth != pixmap.drawable.visual.depth) throw new BadMatch();
 
+        com.wehavephones.core.FrameTimeLogger.GAME_PRESENTS.incrementAndGet();
         synchronized (content.renderLock) {
             content.copyArea((short)0, (short)0, xOff, yOff, pixmap.drawable.width, pixmap.drawable.height, pixmap.drawable);
             Runnable notify = () -> {

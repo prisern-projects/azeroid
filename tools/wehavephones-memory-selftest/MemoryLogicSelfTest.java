@@ -42,13 +42,13 @@ public final class MemoryLogicSelfTest {
                 + "DXVK_HUD=devinfo,fps,frametimes A=1";
         String env = MemoryTransforms.composeEnv(base);
         check("env_no_hud", !env.contains("DXVK_HUD="), env);
-        check("env_wrapper", env.contains("WRAPPER_MAX_IMAGE_COUNT=2"), env);
-        check("env_mesa", env.contains("MESA_SHADER_CACHE_MAX_SIZE=256MB"), env);
+        check("env_wrapper", env.contains("WRAPPER_MAX_IMAGE_COUNT=3"), env);
+        check("env_mesa", env.contains("MESA_SHADER_CACHE_MAX_SIZE=1GB"), env);
         check("env_keeps_other", env.contains("A=1") && env.contains("ZINK_DESCRIPTORS=lazy"), env);
         check("env_stable", env.equals(MemoryTransforms.composeEnv(env)), env);
 
         LinkedHashMap<String, String> parsed = MemoryTransforms.parseEnv(env);
-        check("env_parse", "1".equals(parsed.get("A")) && "2".equals(parsed.get("WRAPPER_MAX_IMAGE_COUNT")), parsed.toString());
+        check("env_parse", "1".equals(parsed.get("A")) && "3".equals(parsed.get("WRAPPER_MAX_IMAGE_COUNT")), parsed.toString());
         check("env_parse_ignores_bad", MemoryTransforms.parseEnv("BAD noequals A=1").size() == 1, "");
 
         String withDxvkConf = "DXVK_CONFIG_FILE=C:/profile-dxvk.conf DXVK_HUD=x A=1";
@@ -60,7 +60,7 @@ public final class MemoryLogicSelfTest {
         String oldLowMode = "MESA_SHADER_CACHE_MAX_SIZE=128MB DXVK_CONFIG_FILE=C:/wehavephones-dxvk.conf A=1";
         String migrated = MemoryTransforms.composeEnv(oldLowMode);
         check("env_drops_old_low_dxvk_conf", !migrated.contains("DXVK_CONFIG_FILE"), migrated);
-        check("env_old_low_mesa_replaced", migrated.contains("MESA_SHADER_CACHE_MAX_SIZE=256MB")
+        check("env_old_low_mesa_replaced", migrated.contains("MESA_SHADER_CACHE_MAX_SIZE=1GB")
                 && !migrated.contains("128MB"), migrated);
         check("env_old_low_stable", migrated.equals(MemoryTransforms.composeEnv(migrated)), migrated);
 

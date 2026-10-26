@@ -2,6 +2,19 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.2.4] - 2026-10-26
+
+Performance round 1, measured against the 0.2.3 baseline (Classic Era, 1024x576: about 100 FPS average,
+1% lows of about 77 FPS):
+
+- **Triple buffering** (3 swapchain images, up from 2). With two, the game waits on the display path and
+  misses 120 Hz refreshes.
+- **Asks for the panel's 120 Hz mode** for the game surface, so adaptive refresh can't drop it to 60 Hz.
+- **Bigger shader cache** (1 GB, up from 256 MB), so fewer shaders are rebuilt between sessions (less stutter
+  in the first minutes).
+- Frame log now also shows `game=` FPS, the frames WoW actually produced, next to the frames shown on screen.
+  That tells whether the limit is the game itself or the display path.
+
 ## [0.2.3] - 2026-10-26
 
 - **Frame-time logging.** Every game session now writes `Download/WeHavePhones/frametimes.log`: one line every

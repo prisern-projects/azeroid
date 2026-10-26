@@ -24,6 +24,13 @@ import java.util.concurrent.Executors;
  */
 public final class FrameTimeLogger {
     public static final String FILE_NAME = "frametimes.log";
+    /**
+     * Frames the game handed to the X server (Present requests). Compared with
+     * the frames drawn on screen it shows where the limit is: game far above
+     * screen means the display path drops frames, equal means the game itself
+     * (CPU/GPU) is the limit.
+     */
+    public static final java.util.concurrent.atomic.AtomicInteger GAME_PRESENTS = new java.util.concurrent.atomic.AtomicInteger();
     private static final long WINDOW_MS = 30_000;
     private static final int MAX_FRAMES = 30 * 240;
     private static final int SESSION_BUCKETS = 1000;
@@ -62,9 +69,10 @@ public final class FrameTimeLogger {
         if (nowMs - windowStartMs >= WINDOW_MS) {
             final int[] window = Arrays.copyOf(intervals, count);
             final long windowMs = nowMs - windowStartMs;
+            final int presents = GAME_PRESENTS.getAndSet(0);
             count = 0;
             windowStartMs = nowMs;
-            writer.execute(() -> flushWindow(window, windowMs));
+            writer.execute(() -> flushWindow(window, windowMs, presents));
         }
     }
 
@@ -72,9 +80,10 @@ public final class FrameTimeLogger {
     public void finish() {
         final int[] window = Arrays.copyOf(intervals, count);
         final long windowMs = SystemClock.elapsedRealtime() - windowStartMs;
+        final int presents = GAME_PRESENTS.getAndSet(0);
         count = 0;
         writer.execute(() -> {
-            if (window.length > 0) flushWindow(window, windowMs);
+            if (window.length > 0) flushWindow(window, windowMs, presents);
             if (sessionFrames == 0) return;
             append("SESSION " + label + " " + timestamp()
                     + String.format(Locale.US, " frames=%d avg=%.1ffps 1%%low=%.1ffps 0.1%%low=%.1ffps",
@@ -85,7 +94,7 @@ public final class FrameTimeLogger {
         });
     }
 
-    private void flushWindow(int[] window, long windowMs) {
+    private void flushWindow(int[] window, long windowMs, int presents) {
         if (window.length == 0) return;
         double fps = window.length * 1000.0 / windowMs;
         if (fps < 5) return;
@@ -109,8 +118,8 @@ public final class FrameTimeLogger {
         double p99 = sorted[Math.min(sorted.length - 1, (int)(sorted.length * 0.99))] / 1e6;
         double p999 = sorted[Math.min(sorted.length - 1, (int)(sorted.length * 0.999))] / 1e6;
         append(String.format(Locale.US,
-                "%s %s avg=%.1ffps median=%.1fms 1%%low=%.1ffps 0.1%%low=%.1ffps worst=%.0fms spikes50ms=%d mem=%s",
-                timestamp(), label, window.length * 1e9 / total, p50, 1000 / p99, 1000 / p999,
+                "%s %s avg=%.1ffps game=%.1ffps median=%.1fms 1%%low=%.1ffps 0.1%%low=%.1ffps worst=%.0fms spikes50ms=%d mem=%s",
+                timestamp(), label, window.length * 1e9 / total, presents * 1000.0 / windowMs, p50, 1000 / p99, 1000 / p999,
                 worst / 1e6, spikes, memAvailable()));
     }
 

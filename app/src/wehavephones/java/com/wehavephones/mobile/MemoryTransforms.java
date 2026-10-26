@@ -37,8 +37,13 @@ public final class MemoryTransforms {
      * a wider or squarer screen than 16:9 without black bars (#26, #27).
      */
     public static final int[] FITTED_HEIGHTS = {576, 720, 900};
-    public static final String MESA_CACHE = "256MB";
-    public static final String WRAPPER_IMAGE_COUNT = "2";
+    public static final String MESA_CACHE = "1GB";
+    /**
+     * Three swapchain images (triple buffering). Two saved a little RAM on 8 GB
+     * phones, but at 120 Hz the game then waits for the display path and misses
+     * refreshes. The S26 Ultra has the headroom.
+     */
+    public static final String WRAPPER_IMAGE_COUNT = "3";
     /**
      * DXVK 2.3 suballocates GPU memory from 256 MB chunks. In Forever on the
      * S23 they held about 370 MB more than the game used. 32 MB chunks cut
