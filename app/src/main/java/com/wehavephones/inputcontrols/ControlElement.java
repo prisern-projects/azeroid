@@ -731,6 +731,11 @@ public class ControlElement {
      * down in binding order, up in reverse. Single-binding buttons behave as before.
      */
     private void pressButtonBindings(boolean down) {
+        if ("PASTE".equals(text)) {
+            // Ctrl+V alone pastes nothing: the activity first puts the phone's clipboard on the X clipboard.
+            if (down) inputControlsView.requestPaste();
+            return;
+        }
         if (down) {
             for (int i = 0; i < bindings.length; i++) {
                 if (i == 0 || bindings[i] != Binding.NONE) inputControlsView.handleInputEvent(getBindingAt(i), true);

@@ -258,4 +258,5 @@ VKD3D (<a href="https://gitlab.winehq.org/wine/vkd3d">gitlab.winehq.org/wine/vkd
 D8VK (<a href="https://github.com/AlpyneDreams/d8vk">github.com/AlpyneDreams/d8vk</a>)
     ]]></string>
     <string name="open_source_notices">Open-source notices and licenses</string>
+    <string name="azeroid_paste_empty">The clipboard is empty. Copy the text first.</string>
 </resources>

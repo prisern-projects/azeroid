@@ -416,6 +416,17 @@ public class InputControlsView extends View {
         return false;
     }
 
+    private Runnable onPasteListener;
+
+    /** The on-screen PASTE button: the activity hands the phone's clipboard to the game. */
+    public void setOnPasteListener(Runnable listener) {
+        onPasteListener = listener;
+    }
+
+    public void requestPaste() {
+        if (onPasteListener != null) post(onPasteListener);
+    }
+
     public void handleInputEvent(Binding binding, boolean isActionDown) {
         handleInputEvent(binding, isActionDown, 0);
     }

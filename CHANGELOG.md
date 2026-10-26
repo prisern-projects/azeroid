@@ -2,6 +2,14 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.3.9] - 2026-10-26
+
+- **Paste, take 3.** 0.3.8's Ctrl+V reached WoW, but Wine never received the phone's clipboard (the built-in
+  bridge isn't used by this Wine). Azeroid's X server now serves the clipboard the standard Linux way (X11
+  CLIPBOARD selection: TARGETS, UTF8_STRING, TEXT, STRING). PASTE puts the phone's clipboard there and then
+  sends Ctrl+V, so WoW pastes it like on a PC. Same buttons as before: on-screen **PASTE**, or in-game menu →
+  *Paste into game*.
+
 ## [0.3.8] - 2026-10-26
 
 - **Paste now works like Ctrl+V.** 0.3.7 typed the clipboard into the game in pieces, and the text came out

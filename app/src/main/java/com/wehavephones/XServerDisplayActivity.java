@@ -95,6 +95,7 @@ import com.wehavephones.xserver.ScreenInfo;
 import com.wehavephones.xserver.Window;
 import com.wehavephones.xserver.WindowManager;
 import com.wehavephones.xserver.XKeycode;
+import com.wehavephones.xserver.XLock;
 import com.wehavephones.xserver.XServer;
 import com.wehavephones.xserver.extensions.PresentExtension;
 
@@ -927,6 +928,7 @@ import java.util.concurrent.Executors;
         rootView.addView(touchpadView);
 
         inputControlsView = new InputControlsView(this);
+        inputControlsView.setOnPasteListener(this::pasteIntoGame);
         inputControlsView.setOverlayOpacity(preferences.getFloat("overlay_opacity", InputControlsView.DEFAULT_OVERLAY_OPACITY));
         inputControlsView.setTouchpadView(touchpadView);
         inputControlsView.setXServer(xServer);
@@ -1958,14 +1960,30 @@ import java.util.concurrent.Executors;
     }
 
     /**
-     * Ctrl+V into the game, like a keyboard: Wine then reads the phone's clipboard through
-     * WineRequestHandler and the focused text box pastes it.
+     * Paste the phone's clipboard into the game: the X server takes the CLIPBOARD selection with
+     * the clipboard text (Wine reads it like any X11 clipboard), then Ctrl+V goes to the game.
+     * Call on the UI thread; Android only lets the focused app read the clipboard.
      */
     public void pasteIntoGame() {
-        xServer.injectKeyPress(XKeycode.KEY_CTRL_L);
-        xServer.injectKeyPress(XKeycode.KEY_V);
-        xServer.injectKeyRelease(XKeycode.KEY_V);
-        xServer.injectKeyRelease(XKeycode.KEY_CTRL_L);
+        android.content.ClipboardManager clipboard = (android.content.ClipboardManager)getSystemService(CLIPBOARD_SERVICE);
+        android.content.ClipData clip = clipboard != null ? clipboard.getPrimaryClip() : null;
+        CharSequence text = clip != null && clip.getItemCount() > 0 ? clip.getItemAt(0).coerceToText(this) : null;
+        if (text == null || text.length() == 0) {
+            android.widget.Toast.makeText(this, R.string.azeroid_paste_empty, android.widget.Toast.LENGTH_SHORT).show();
+            return;
+        }
+        final String value = text.toString();
+        try (XLock lock = xServer.lock(XServer.Lockable.WINDOW_MANAGER)) {
+            xServer.selectionManager.setServerText(com.wehavephones.xserver.Atom.internAtom("CLIPBOARD"),
+                    xServer.windowManager.rootWindow, value, (int)android.os.SystemClock.uptimeMillis());
+        }
+        // Give Wine a moment to see that it no longer owns the clipboard.
+        xServerView.postDelayed(() -> {
+            xServer.injectKeyPress(XKeycode.KEY_CTRL_L);
+            xServer.injectKeyPress(XKeycode.KEY_V);
+            xServer.injectKeyRelease(XKeycode.KEY_V);
+            xServer.injectKeyRelease(XKeycode.KEY_CTRL_L);
+        }, 250);
     }
 
     public WinHandler getWinHandler() {
