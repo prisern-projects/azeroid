@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.opengl.GLES20;
+import android.opengl.GLES30;
 import android.opengl.GLSurfaceView;
 import android.util.Log;
 
@@ -279,7 +280,23 @@ public class GLRenderer implements GLSurfaceView.Renderer, WindowManager.OnWindo
             GLES20.glUniform1fv(material.getUniformLocation("xform"), tmpXForm1.length, tmpXForm1, 0);
             GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, quadVertices.count());
             GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0);
+            if (texture instanceof GPUImage) waitForGpuRead();
         }
+    }
+
+    /**
+     * A GPUImage is the same memory the X server copies the game's next frame
+     * into. glDrawArrays only queues the read, so without this wait the copy
+     * (which takes renderLock once it is released) can overwrite the buffer
+     * while the GPU is still sampling it, and the screen shows half of each
+     * frame: tearing. The fence covers just this draw, normally well under a
+     * millisecond; the timeout keeps a stuck GPU from blocking presents.
+     */
+    private static void waitForGpuRead() {
+        long sync = GLES30.glFenceSync(GLES30.GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+        if (sync == 0) return;
+        GLES30.glClientWaitSync(sync, GLES30.GL_SYNC_FLUSH_COMMANDS_BIT, 8_000_000L);
+        GLES30.glDeleteSync(sync);
     }
 
     private void renderWindows() {

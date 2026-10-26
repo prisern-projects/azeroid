@@ -69,6 +69,14 @@ public class WeHavePhonesSettingsFragment extends Fragment {
             activity.updateStageStatus(getString(R.string.wehavephones_settings_saved), false);
         });
 
+        CheckBox graphicsLog = view.findViewById(R.id.CBGraphicsLogOnce);
+        final android.content.SharedPreferences defaults = androidx.preference.PreferenceManager.getDefaultSharedPreferences(activity);
+        graphicsLog.setChecked(defaults.getBoolean("azeroid_wrapper_log_once", false));
+        graphicsLog.setOnCheckedChangeListener((button, checked) -> {
+            defaults.edit().putBoolean("azeroid_wrapper_log_once", checked).apply();
+            activity.updateStageStatus(getString(R.string.wehavephones_settings_saved), false);
+        });
+
         CheckBox primeCores = view.findViewById(R.id.CBPrimeCores);
         primeCores.setChecked(WeHavePhonesConfig.isPrimeCores(activity));
         primeCores.setOnCheckedChangeListener((button, checked) -> {

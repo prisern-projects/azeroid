@@ -1429,7 +1429,12 @@ import java.util.concurrent.Executors;
             // its uploads skip the emulation, so WoW cannot draw its textures.
             if (plan != null ? plan.vulkanCompatLayer : !GPUInformation.mayBeAdreno(this)) VulkanCompatLayer.install(this, rootDir, envVars);
 
-            boolean enableWrapperLog = preferences.getBoolean("enable_wrapper_log", false);
+            boolean enableWrapperLog = preferences.getBoolean("enable_wrapper_log", false)
+                    || preferences.getBoolean("azeroid_wrapper_log_once", false);
+            // Azeroid's Diagnostics switch logs one session only: the log grows fast.
+            if (preferences.getBoolean("azeroid_wrapper_log_once", false)) {
+                preferences.edit().putBoolean("azeroid_wrapper_log_once", false).apply();
+            }
             if (enableWrapperLog) {
                 if (!envVars.has("WRAPPER_LOG_FILE")) envVars.put("WRAPPER_LOG_FILE", new File(SessionLogs.prepareLogDir(imageFs), "wrapper.log").getAbsolutePath());
                 if (!envVars.has("WRAPPER_LOG_LEVEL")) envVars.put("WRAPPER_LOG_LEVEL", preferences.getString("wrapper_log_level", "debug"));

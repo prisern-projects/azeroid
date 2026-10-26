@@ -2,6 +2,16 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.2.8] - 2026-10-26
+
+- **Screen tearing fix.** The game's frame is copied into a buffer that the GPU reads directly. The X server
+  could start copying the next frame while the GPU was still drawing the previous one onto the screen, which
+  showed half of each. The renderer now waits until the GPU has finished reading before the next copy can
+  start (normally well under 1 ms per frame).
+- Settings: *Write a graphics log for the next game session*. One session only, saved to
+  `Download/WeHavePhones/wrapper.log`. It shows whether the phone's driver handles WoW's compressed
+  textures natively or Azeroid has to unpack them on the GPU.
+
 ## [0.2.7] - 2026-10-26
 
 - **Fixed:** Diagnostics' "Last session end" was never saved, because the app restarts itself right after a
