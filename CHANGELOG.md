@@ -2,6 +2,12 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.2.5] - 2026-10-26
+
+- **Fixed:** 0.2.4's request for the screen's 120 Hz mode made Samsung switch the display to another
+  resolution. The game was drawn small in the top-left corner and ran at 60 FPS. That request is removed.
+  Triple buffering, the bigger shader cache and the `game=` FPS log from 0.2.4 stay.
+
 ## [0.2.4] - 2026-10-26
 
 Performance round 1, measured against the 0.2.3 baseline (Classic Era, 1024x576: about 100 FPS average,
