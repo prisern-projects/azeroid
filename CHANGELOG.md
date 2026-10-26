@@ -2,6 +2,13 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.3.2] - 2026-10-26
+
+- **Fixed: game drawn small in the top-left corner and locked to 60 FPS.** Samsung's game optimiser was
+  downscaling Azeroid's window to 75% and capping it at 60 FPS, without stretching the picture back. Azeroid now
+  tells Android not to downscale it or override its frame rate. If it still happens, the frame log shows
+  `surface=…!=view…`.
+
 ## [0.3.1] - 2026-10-26
 
 - **Azeroid on-screen controller.** The built-in Virtual Gamepad has a new layout and look: a full Xbox layout

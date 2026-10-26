@@ -43,8 +43,20 @@ public final class FrameTimeLogger {
         extraTag = value != null ? value : "";
     }
 
+    private static volatile String surfaceTag = "";
+
+    /** The GL surface size against its view's size; they differ when the system downscales the game. */
+    public static void setSurface(int surfaceWidth, int surfaceHeight, int viewWidth, int viewHeight) {
+        surfaceTag = surfaceWidth == viewWidth && surfaceHeight == viewHeight
+                ? "surface=" + surfaceWidth + "x" + surfaceHeight
+                : "surface=" + surfaceWidth + "x" + surfaceHeight + "!=view" + viewWidth + "x" + viewHeight;
+    }
+
     private static String tags() {
-        return extraTag.isEmpty() ? tag : tag + " " + extraTag;
+        StringBuilder all = new StringBuilder(tag);
+        if (!extraTag.isEmpty()) all.append(' ').append(extraTag);
+        if (!surfaceTag.isEmpty()) all.append(' ').append(surfaceTag);
+        return all.toString();
     }
 
     /** A short label (e.g. "cpu=prime") added to every line, for A/B comparisons. */

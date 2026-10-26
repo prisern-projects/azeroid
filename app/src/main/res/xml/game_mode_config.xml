@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Azeroid renders WoW into its own GL surface. Android/Samsung game interventions that
+  downscale the window or override the frame rate shrink that surface without scaling it
+  back up: the game then shows small in the top-left corner, locked to 60 FPS
+  (seen on the S26 Ultra). Opt out of both; keep the game modes themselves.
+-->
+<game-mode-config xmlns:android="http://schemas.android.com/apk/res/android"
+    android:supportsPerformanceGameMode="true"
+    android:supportsBatteryGameMode="true"
+    android:allowGameAngleDriver="false"
+    android:allowGameDownscaling="false"
+    android:allowGameFpsOverride="false" />

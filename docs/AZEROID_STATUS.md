@@ -73,6 +73,11 @@ performance, and specifically **smoother than WeHavePhones**. Tuning targets thi
   over 50 ms per 30 s, but single 100–765 ms stalls remain. Owner: "felt better". With async shaders the rest
   is probably asset streaming (new players' models and textures), not shaders.
 - 0.2.11 Play retry: WoW spawned 36 s after Play, down from 41–95 s.
+- **Corrected (0.3.1):** the "game small in the top-left corner at 60 FPS" bug came back without any display-mode
+  code. The whole window (GL surface and views) was drawn into the top-left 75% and capped at 60, which looks
+  like Android/Samsung game downscaling and an FPS override. The app declares `isGame`. 0.3.2 opts out with the
+  `android.game_mode_config` meta-data (`allowGameDownscaling=false`, `allowGameFpsOverride=false`), and the frame
+  log tags `surface=WxH!=viewWxH` when the sizes differ. The 0.2.4 display-mode request may have been a coincidence.
 - **Don't request a display mode or frame rate** (`preferredDisplayModeId`, `Surface.setFrameRate`) on the
   S26 Ultra. In 0.2.4 it switched the panel resolution and the X-server output ended up small in the corner at
   60 FPS. Reverted in 0.2.5. 120 Hz comes from Samsung's Motion smoothness = Adaptive.

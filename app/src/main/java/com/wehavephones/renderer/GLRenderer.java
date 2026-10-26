@@ -104,6 +104,7 @@ public class GLRenderer implements GLSurfaceView.Renderer, WindowManager.OnWindo
 
         surfaceWidth = width;
         surfaceHeight = height;
+        com.wehavephones.core.FrameTimeLogger.setSurface(width, height, xServerView.getWidth(), xServerView.getHeight());
         viewTransformation.update(width, height, xServer.screenInfo.width, xServer.screenInfo.height);
         viewportNeedsUpdate = true;
     }
