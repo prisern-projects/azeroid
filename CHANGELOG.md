@@ -2,6 +2,13 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.3.4] - 2026-10-26
+
+- **Fixed: Battle.net hung when switching the WoW account** (for example WoW1 → WoW2). Since 0.2.2 Battle.net
+  ran with fewer browser processes to save memory during the first big download, and that can break its
+  pop-up menus. With RAM Plus at maximum the saving is no longer needed, so Battle.net runs with its normal
+  settings again. If a large download ever crashes for memory again, Diagnostics will show `LOW_MEMORY`.
+
 ## [0.3.3] - 2026-10-26
 
 - **On-screen controller moved out of the way.** The game is 16:9 on a wider screen, so there are black bars

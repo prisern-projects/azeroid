@@ -13,8 +13,9 @@ performance, and specifically **smoother than WeHavePhones**. Tuning targets thi
 - The app is **WeHavePhones** (MIT, ashmerra) rebranded as Azeroid. It's built on Winlator LLM (FrontMage).
   Upstream commit: `UPSTREAM.txt`. Package `com.azeroid.app`, so it installs over 0.1.x.
 - Runtime (from upstream): GE-Proton 10.0-34 ARM64EC (The412Banner), patched ntdll, FEX 2601-116,
-  Battle.net flags `--disable-gpu --enable-features=NetworkServiceInProcess2` plus Azeroid's
-  `--renderer-process-limit=1 --disable-site-isolation-trials --disable-gpu-shader-disk-cache` (0.2.2), Adreno 840 → system driver.
+  Battle.net flags `--disable-gpu --enable-features=NetworkServiceInProcess2`. 0.2.2–0.3.3 also added
+  `--renderer-process-limit=1 --disable-site-isolation-trials --disable-gpu-shader-disk-cache` to save RAM, but
+  the WoW account dropdown then hung, so 0.3.4 dropped them again (RAM Plus covers the memory), Adreno 840 → system driver.
 - WoW runs Blizzard's **native ARM64 client** (`WowClassic-ARM64.exe`), with no x86 translation for the game.
 - Releases: bump `VERSION` and add a `CHANGELOG.md` section, then push to `main`. CI (`.github/workflows/build.yml`)
   builds, signs and publishes `v<VERSION>` with `Azeroid-<version>.apk`. The in-app updater

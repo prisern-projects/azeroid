@@ -22,7 +22,7 @@
         "MESA_SHADER_CACHE_DISABLE": "false",
         "WINE_FDSAN_LEVEL": "off"
       },
-      "bnetFlags": "--disable-gpu --enable-features=NetworkServiceInProcess2 --renderer-process-limit=1 --disable-site-isolation-trials --disable-gpu-shader-disk-cache",
+      "bnetFlags": "--disable-gpu --enable-features=NetworkServiceInProcess2",
       "layer": {
         "name": "proton-10.0-34-arm64ec",
         "archive": "GE-proton-10.0-34-arm64ec.wcp",
