@@ -76,9 +76,9 @@ public final class LaunchSelfTest {
         check("forever exe comes from the scan", "", plan.resolve("_forever_").exe);
         check("play button from left", 155, plan.playFromLeft);
         check("play button from bottom", 108, plan.playFromBottom);
-        check("play attempts", 6, plan.playAttempts);
+        check("play attempts", 12, plan.playAttempts);
         check("launcher restarts", 2, plan.launcherRestarts);
-        check("play wait", 10, plan.playWaitSeconds);
+        check("play wait", 5, plan.playWaitSeconds);
         check("case-insensitive dir", "wow", plan.resolve("_RETAIL_").uid);
         check("null dir defaults to retail", "wow", plan.resolve(null).uid);
 

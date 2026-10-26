@@ -2,6 +2,12 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.2.11] - 2026-10-26
+
+- **Faster Play.** Battle.net ignores Play clicks until its page has rendered. Azeroid waited 10 s after each
+  missed click, but a click that lands starts WoW in about 2.5 s. It now retries after 5 s (12 tries instead
+  of 6, same total patience), which saves 5–20 s on most launches.
+
 ## [0.2.10] - 2026-10-26
 
 - **Native texture decoding is now the default.** Back-to-back test in Stormwind (same crowd, 1280x720):

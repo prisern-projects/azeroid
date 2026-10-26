@@ -189,8 +189,10 @@ public final class WeHavePhonesLaunchPlan {
      * page can take minutes to render after sign-in on a phone and drops
      * clicks until then, so the click repeats until the game starts.
      */
-    public int playAttempts = 6;
-    public int playWaitSeconds = 10;
+    // Azeroid: a click that lands starts WoW in about 2.5 s (S26 Ultra logs), so a missed
+    // click is retried after 5 s instead of 10. Twice the clicks keeps the same total wait.
+    public int playAttempts = 12;
+    public int playWaitSeconds = 5;
     /**
      * Battle.net restarts when the clicks did not start the game: it
      * sometimes hangs before its page renders (spinner, log silent).
