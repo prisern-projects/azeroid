@@ -58,6 +58,11 @@ performance, and specifically **smoother than WeHavePhones**. Tuning targets thi
 - **Turnip Gen8 V37 on the Adreno 840 isn't usable (Oct 2026).** WoW's world textures came out as noise (BCn
   path with WRAPPER_EMULATE_BCN=3 plus Turnip), it was stuck at 60 FPS, and most launches stalled before Play.
   The heap shows 8.3 GB vs 11 GB on the system driver. Stay on the system driver; retest newer Turnip builds later.
+- WoW's own DXVK (arm64, "v2.3.1+") on the system driver: `textureCompressionBC: 1` (could be the
+  wrapper's emulation reporting it), present mode IMMEDIATE, 3 images, state cache works, and **"Graphics
+  pipeline libraries not supported"**. So new shaders compile on the render thread, the likely source of the
+  100–500 ms hitches. Candidate fix: a DXVK build with async/GPL that works on this driver.
+- The wrapper's WRAPPER_LOG_FILE produced no file on the S26 Ultra (0.2.8). Use DXVK's own log in wine.log instead.
 - **Don't request a display mode or frame rate** (`preferredDisplayModeId`, `Surface.setFrameRate`) on the
   S26 Ultra. In 0.2.4 it switched the panel resolution and the X-server output ended up small in the corner at
   60 FPS. Reverted in 0.2.5. 120 Hz comes from Samsung's Motion smoothness = Adaptive.
