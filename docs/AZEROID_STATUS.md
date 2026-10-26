@@ -65,6 +65,10 @@ performance, and specifically **smoother than WeHavePhones**. Tuning targets thi
 - The wrapper's WRAPPER_LOG_FILE produced no file on the S26 Ultra (0.2.8). Use DXVK's own log in wine.log instead.
 - **Native BCn (WRAPPER_EMULATE_BCN=0, ENABLE_BCN_COMPUTE=0) on the system driver:** renders correctly. Back-to-back
   Stormwind at 720p: avg 48 / 1% lows 36 vs emulated 36–39 / 22–24. Default since 0.2.10.
+- Owner's "best so far" setup (0.2.10): 1024x576, WoW graphics preset 3, anti-aliasing off, VSync off,
+  native textures, pinning on. Steady 80–88 FPS, 1% lows 44–57, almost no frames over 50 ms.
+- Launch: the first Play click almost always misses (the page hasn't rendered yet), and a click that lands
+  spawns WoW in about 2.5 s. 0.2.11 retries every 5 s instead of every 10 s.
 - **Don't request a display mode or frame rate** (`preferredDisplayModeId`, `Surface.setFrameRate`) on the
   S26 Ultra. In 0.2.4 it switched the panel resolution and the X-server output ended up small in the corner at
   60 FPS. Reverted in 0.2.5. 120 Hz comes from Samsung's Motion smoothness = Adaptive.
