@@ -2,6 +2,12 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.3.15] - 2026-10-26
+
+- **On-screen right stick works like a real stick.** It was a touchpad-style camera pad that only turned the
+  camera while the finger was moving. It now holds a direction like the left stick: push and hold to keep
+  turning, release to stop.
+
 ## [0.3.14] - 2026-10-26
 
 - **Back to the 0.3.6 code**, the last version before the paste attempts. Every paste change is undone (the
