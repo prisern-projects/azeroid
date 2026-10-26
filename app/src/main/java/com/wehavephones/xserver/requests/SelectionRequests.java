@@ -6,7 +6,6 @@ import com.wehavephones.xconnector.XInputStream;
 import com.wehavephones.xconnector.XOutputStream;
 import com.wehavephones.xconnector.XStreamLock;
 import com.wehavephones.xserver.Atom;
-import com.wehavephones.xserver.ClipboardLog;
 import com.wehavephones.xserver.Property;
 import com.wehavephones.xserver.SelectionManager;
 import com.wehavephones.xserver.Window;
@@ -34,14 +33,12 @@ public abstract class SelectionRequests {
         if (!Atom.isValid(atom)) throw new BadAtom(atom);
 
         client.xServer.selectionManager.setSelection(atom, owner, client, timestamp);
-        ClipboardLog.log("SetSelectionOwner " + ClipboardLog.atom(atom) + " window=" + windowId);
     }
 
     public static void getSelectionOwner(XClient client, XInputStream inputStream, XOutputStream outputStream) throws IOException, XRequestError {
         int atom = inputStream.readInt();
         if (!Atom.isValid(atom)) throw new BadAtom(atom);
         Window owner = client.xServer.selectionManager.getSelection(atom).owner;
-        ClipboardLog.log("GetSelectionOwner " + ClipboardLog.atom(atom) + " -> " + (owner != null ? owner.id : 0));
 
         try (XStreamLock lock = outputStream.lock()) {
             outputStream.writeByte(RESPONSE_CODE_SUCCESS);
@@ -70,8 +67,6 @@ public abstract class SelectionRequests {
         if (property == 0) property = target;
 
         SelectionManager.Selection selection = client.xServer.selectionManager.getSelection(atom);
-        ClipboardLog.log("ConvertSelection " + ClipboardLog.atom(atom) + " target=" + ClipboardLog.atom(target)
-                + " property=" + ClipboardLog.atom(property) + " serverOwned=" + selection.isServerOwned());
         if (selection.owner != null && !selection.isServerOwned() && selection.getClient() != null) {
             selection.getClient().sendEvent(new SelectionRequest(timestamp, selection.owner.id, requestorId, atom, target, property));
             return;
@@ -102,7 +97,6 @@ public abstract class SelectionRequests {
                 served = true;
             }
         }
-        ClipboardLog.log("  -> " + (served ? "served" : "refused"));
         client.sendEvent(new SelectionNotify(timestamp, requestorId, atom, target, served ? property : 0));
     }
 }

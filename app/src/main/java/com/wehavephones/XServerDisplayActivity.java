@@ -1958,14 +1958,6 @@ import java.util.concurrent.Executors;
         return xServer;
     }
 
-    /** Ctrl+V into the game, as a keyboard would send it. */
-    public void pressPasteKeys() {
-        xServer.injectKeyPress(XKeycode.KEY_CTRL_L);
-        xServer.injectKeyPress(XKeycode.KEY_V);
-        xServer.injectKeyRelease(XKeycode.KEY_V);
-        xServer.injectKeyRelease(XKeycode.KEY_CTRL_L);
-    }
-
     public WinHandler getWinHandler() {
         return winHandler;
     }

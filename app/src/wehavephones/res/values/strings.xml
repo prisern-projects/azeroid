@@ -360,8 +360,6 @@
     <string name="wehavephones_settings_keep_running_hint">Keeps WoW connected while another app is open or the screen is off, with a notification while it runs. In the background the game drops to 5 FPS but still uses battery and memory. When off, switching apps pauses the game and the server may disconnect you. Takes effect the next time the game starts.</string>
     <string name="wehavephones_settings_diagnostics_title">Diagnostics</string>
     <string name="wehavephones_settings_performance_overlay">Show performance overlay</string>
-    <string name="azeroid_menu_paste">Paste into game</string>
-    <string name="azeroid_paste_working">Pasting… keep the text box selected</string>
     <string name="azeroid_settings_native_textures">Let the graphics driver decode textures itself (faster; turn off if textures look broken)</string>
     <string name="azeroid_settings_prime_cores">Run WoW\'s main threads on the fastest cores</string>
     <string name="wehavephones_settings_performance_overlay_hint">Takes effect the next time the game starts.</string>

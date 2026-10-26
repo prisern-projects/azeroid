@@ -79,6 +79,11 @@ performance, and specifically **smoother than WeHavePhones**. Tuning targets thi
   like Android/Samsung game downscaling and an FPS override. The app declares `isGame`. 0.3.2 opts out with the
   `android.game_mode_config` meta-data (`allowGameDownscaling=false`, `allowGameFpsOverride=false`), and the frame
   log tags `surface=WxH!=viewWxH` when the sizes differ. The 0.2.4 display-mode request may have been a coincidence.
+- **Paste into WoW (0.3.7–0.3.12) failed and was removed.** Facts for a retry: Wine (GE-Proton 10) polls X
+  `GetSelectionOwner CLIPBOARD` every 2 s, so it uses the X11 clipboard, not the WineRequestHandler port. With
+  a server-owned CLIPBOARD, Wine asked `TARGETS` (served, ATOM list) and then never asked for UTF8_STRING. Suspect
+  the TARGETS property read (GetProperty format 32) or a missing XFixes. Typing as key presses melts the phone:
+  the owner's RestedXP string is 664k characters. Wine `clip.exe` via a batch file also did nothing visible.
 - **Don't request a display mode or frame rate** (`preferredDisplayModeId`, `Surface.setFrameRate`) on the
   S26 Ultra. In 0.2.4 it switched the panel resolution and the X-server output ended up small in the corner at
   60 FPS. Reverted in 0.2.5. 120 Hz comes from Samsung's Motion smoothness = Adaptive.

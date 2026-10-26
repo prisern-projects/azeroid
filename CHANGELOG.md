@@ -2,6 +2,13 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.3.13] - 2026-10-26
+
+- **Paste removed.** None of the routes got the phone's clipboard into WoW (Wine lists the clipboard formats
+  but never fetches the text, and `clip` didn't help either). The menu item and the clipboard log, which wrote
+  to storage every 2 seconds, are gone. The X server keeps standard clipboard-request support, which costs
+  nothing.
+
 ## [0.3.12] - 2026-10-26
 
 - **Paste, new route.** In-game menu → *Paste into game* now writes the phone's clipboard to a file, runs
