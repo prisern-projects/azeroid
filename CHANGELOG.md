@@ -2,6 +2,12 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.3.6] - 2026-10-26
+
+- Diagnostics, *WoW game account settings*: now also lists Battle.net files changed in the last 15 minutes
+  and Battle.net log lines that mention an account (emails hidden). Battle.net.config and Config.wtf turned
+  out not to store the WoW1/WoW2 choice.
+
 ## [0.3.5] - 2026-10-26
 
 - Diagnostics: new *WoW game account settings* section. It shows where Battle.net and WoW store the chosen
