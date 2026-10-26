@@ -8,7 +8,7 @@ Native WoW Classic on the owner's **Samsung Galaxy S26 Ultra** (SM-S948B, Snapdr
 Adreno 840, Android 17), used as a handheld with a **GameSir G8 Galileo**. Priorities: ease of use and
 performance, and specifically **smoother than WeHavePhones**. Tuning targets this one device, not all of Android.
 
-## Current state (0.2.2)
+## Current state (0.3.14 = 0.3.6 code plus clutter removals)
 
 - The app is **WeHavePhones** (MIT, ashmerra) rebranded as Azeroid. It's built on Winlator LLM (FrontMage).
   Upstream commit: `UPSTREAM.txt`. Package `com.azeroid.app`, so it installs over 0.1.x.
