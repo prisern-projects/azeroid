@@ -8,7 +8,7 @@
     android:background="@drawable/wehavephones_screen_background">
     <ScrollView
         android:id="@+id/WeHavePhonesRail"
-        android:layout_width="172dp"
+        android:layout_width="190dp"
         android:layout_height="match_parent"
         android:background="@drawable/wehavephones_rail_background"
         android:elevation="0dp"
@@ -22,25 +22,26 @@
             android:paddingBottom="6dp">
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="40dp"
+                android:layout_height="52dp"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:paddingLeft="10dp"
+                android:paddingLeft="16dp"
                 android:paddingRight="10dp">
                 <ImageView
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:src="@drawable/wehavephones_flip_phone"
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
+                    android:src="@drawable/azeroid_mark"
                     android:importantForAccessibility="no" />
                 <TextView
                     android:id="@+id/TVWeHavePhonesLogo"
                     style="@style/WeHavePhonesHeader"
-                    android:paddingLeft="4dp"
-                    android:letterSpacing="0"
+                    android:paddingLeft="8dp"
+                    android:letterSpacing="0.15"
                     android:text="@string/wehavephones_logo"
-                    android:textSize="14sp"
-                    android:fontFamily="sans-serif-black"
-                    android:textColor="@color/wehavephones_on_shell"
+                    android:textAllCaps="true"
+                    android:textSize="17sp"
+                    android:fontFamily="@font/azeroid_display"
+                    android:textColor="@color/wehavephones_accent"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -119,7 +120,7 @@
             android:gravity="center"
             android:fontFamily="sans-serif"
             android:text="@string/wehavephones_disclaimer"
-            android:textColor="#A9BDCD"
+            android:textColor="#8E98A6"
             android:textSize="10sp" />
     </LinearLayout>
 </LinearLayout>

@@ -167,7 +167,7 @@ public class LaunchOverlayView extends FrameLayout {
         letter.setText(game.letter);
         Drawable gem = findViewById(R.id.VOverlayCrestGem).getBackground().mutate();
         gem.setTintMode(PorterDuff.Mode.MULTIPLY);
-        gem.setTint(0xFF0D315A);
+        gem.setTint(0xFFFFFFFF);
     }
 
     private int detailFor(LaunchProgress progress) {

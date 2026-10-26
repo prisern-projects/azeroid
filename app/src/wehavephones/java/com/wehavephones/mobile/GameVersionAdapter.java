@@ -22,7 +22,7 @@ import java.util.List;
  */
 final class GameVersionAdapter extends ArrayAdapter<BattleNetGames.Game> {
     /** Gem color for games outside the catalog: the game-font yellow. */
-    static final int DEFAULT_ACCENT = 0xFF0D315A;
+    static final int DEFAULT_ACCENT = 0xFF1F2632;
 
     /** List rows everywhere: the Play screen opens this as a popup, not a closed dropdown. */
     private final boolean popupRows;

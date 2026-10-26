@@ -27,7 +27,7 @@ public class WeHavePhonesAtmosphereView extends View {
         setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_NO);
     }
 
-    /** Kept for screen lifecycle callers; the phone LCD background stays still. */
+    /** Kept for screen lifecycle callers; Azeroid's flat ink background stays still. */
     public void setAnimated(boolean animated) { invalidate(); }
 
     static boolean animationsEnabled(Context context) {
@@ -36,7 +36,7 @@ public class WeHavePhonesAtmosphereView extends View {
 
     @Override protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         background = new LinearGradient(0, 0, 0, Math.max(1, h),
-                0xFFC8DAB3, 0xFFB1C99C, Shader.TileMode.CLAMP);
+                0xFF0E1116, 0xFF0E1116, Shader.TileMode.CLAMP);
         outline.reset();
         outline.addRoundRect(new RectF(0, 0, w, h), 9 * density, 9 * density, Path.Direction.CW);
     }
@@ -47,11 +47,6 @@ public class WeHavePhonesAtmosphereView extends View {
         paint.setShader(background);
         canvas.drawRect(0, 0, getWidth(), getHeight(), paint);
         paint.setShader(null);
-        paint.setColor(0x04405C36);
-        paint.setStrokeWidth(1);
-        for (float y = 0; y < getHeight(); y += 3 * density) {
-            canvas.drawLine(0, y, getWidth(), y, paint);
-        }
         canvas.restore();
     }
 }

@@ -2,6 +2,16 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.3.0] - 2026-10-26
+
+- **Azeroid's own look.** Dark ink background, slate panels and one gold accent, with the Cinzel "AZEROID"
+  wordmark. This replaces the WeHavePhones phone-and-LCD style across Home, Setup, Settings, Diagnostics,
+  Add-ons and the launch screen. Home has a large gold PLAY button with Open Battle.net below it. The engine
+  underneath is unchanged.
+- **FPS overlay redesigned:** one compact line in the top-left corner showing FPS, frame time, **battery %**
+  (⚡ while charging), battery temperature and free RAM. Turn it on in Settings → *Show performance overlay*.
+- Next: Azeroid's own on-screen controller.
+
 ## [0.2.12] - 2026-10-26
 
 - **Fewer hitches (test build).** WoW's DXVK is now v2.3.1 with the dxvk-gplasync patch. The phone's driver

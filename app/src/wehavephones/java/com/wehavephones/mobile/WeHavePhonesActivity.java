@@ -158,7 +158,7 @@ public class WeHavePhonesActivity extends AppCompatActivity {
     private static void colorLogo(TextView logo) {
         android.text.SpannableString name = new android.text.SpannableString(logo.getText());
         int start = name.toString().indexOf("Have");
-        if (start >= 0) name.setSpan(new android.text.style.ForegroundColorSpan(0xFF62B2F2),
+        if (start >= 0) name.setSpan(new android.text.style.ForegroundColorSpan(0xFFF2C14E),
                 start, start + 4, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         logo.setText(name);
     }

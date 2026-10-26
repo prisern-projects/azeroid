@@ -1,1 +1,2 @@
-<selector xmlns:android="http://schemas.android.com/apk/res/android"><item android:state_enabled="false" android:color="#91A8BC" /><item android:color="@color/wehavephones_on_shell" /></selector>
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android"><item android:state_enabled="false" android:color="#5C6573" /><item android:state_selected="true" android:color="@color/wehavephones_accent" /><item android:color="#A9B2BF" /></selector>

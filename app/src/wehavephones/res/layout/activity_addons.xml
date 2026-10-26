@@ -126,7 +126,7 @@
                 android:lineSpacingExtra="1dp"
                 android:maxLines="5"
                 android:ellipsize="end"
-                android:textColor="#A9BDCD"
+                android:textColor="#8E98A6"
                 android:textSize="11sp" />
         </LinearLayout>
     </ScrollView>

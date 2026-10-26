@@ -57,8 +57,8 @@ public class LaunchBarView extends View {
     }
 
     @Override protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-        bezel = new LinearGradient(0, 0, 0, Math.max(1, h), 0xFFF0F4F8, 0xFF93A9BC, Shader.TileMode.CLAMP);
-        fill = new LinearGradient(0, 0, 0, Math.max(1, h), 0xFF3196E5, 0xFF1059AF, Shader.TileMode.CLAMP);
+        bezel = new LinearGradient(0, 0, 0, Math.max(1, h), 0xFF2A3240, 0xFF2A3240, Shader.TileMode.CLAMP);
+        fill = new LinearGradient(0, 0, 0, Math.max(1, h), 0xFFF2C14E, 0xFFF2C14E, Shader.TileMode.CLAMP);
     }
 
     @Override protected void onDetachedFromWindow() {
@@ -73,17 +73,17 @@ public class LaunchBarView extends View {
         track.set(0, 0, w, h);
         canvas.drawRoundRect(track, 6 * density, 6 * density, paint);
         paint.setShader(null);
-        paint.setColor(0xFF123747);
+        paint.setColor(0xFF0E1116);
         track.inset(inset, inset);
         canvas.drawRoundRect(track, 3 * density, 3 * density, paint);
         canvas.save();
         canvas.clipRect(track.left, track.top, track.left + track.width() * fraction, track.bottom);
         paint.setShader(failed ? null : fill);
-        if (failed) paint.setColor(0xFF9A2838);
+        if (failed) paint.setColor(0xFFFF8A80);
         canvas.drawRoundRect(track, 3 * density, 3 * density, paint);
         canvas.restore();
         paint.setShader(null);
-        paint.setColor(0xFF123747);
+        paint.setColor(0xFF0E1116);
         paint.setStrokeWidth(2 * density);
         for (int i = 1; i < steps; i++) {
             float x = track.left + track.width() * i / steps;

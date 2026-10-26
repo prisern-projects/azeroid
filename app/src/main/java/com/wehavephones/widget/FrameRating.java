@@ -71,27 +71,43 @@ public class FrameRating extends FrameLayout implements Runnable {
     @Override
     public void run() {
         if (getVisibility() == GONE) setVisibility(View.VISIBLE);
-        textView.setText(String.format(Locale.ENGLISH, "%.1f", lastFPS));
+        textView.setText(String.format(Locale.ENGLISH, "%.0f", lastFPS));
         if (showDetails) detailsView.setText(formatDetails());
     }
 
+    /** One line: frame time (worst), battery % (⚡ while charging), battery temperature, free RAM. */
     private String formatDetails() {
         StringBuilder sb = new StringBuilder();
         if (lastFPS > 0) {
             sb.append(String.format(Locale.ENGLISH, "%.1f ms (max %d)", 1000f / lastFPS, lastMaxFrameInterval));
         }
+        Intent battery = getContext().registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        if (battery != null) {
+            int level = battery.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+            int scale = battery.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+            int status = battery.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+            boolean charging = status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL;
+            if (level >= 0 && scale > 0) {
+                separator(sb);
+                if (charging) sb.append('\u26A1');
+                sb.append(Math.round(level * 100f / scale)).append('%');
+            }
+            int temperature = battery.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, Integer.MIN_VALUE);
+            if (temperature != Integer.MIN_VALUE) {
+                separator(sb);
+                sb.append(String.format(Locale.ENGLISH, "%.0f\u00B0C", temperature / 10f));
+            }
+        }
         long availableMB = readMemAvailableMB();
         if (availableMB >= 0) {
-            if (sb.length() > 0) sb.append('\n');
-            sb.append(String.format(Locale.ENGLISH, "RAM %.1f GB free", availableMB / 1024f));
-        }
-        Intent battery = getContext().registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-        int temperature = battery != null ? battery.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, Integer.MIN_VALUE) : Integer.MIN_VALUE;
-        if (temperature != Integer.MIN_VALUE) {
-            if (sb.length() > 0) sb.append('\n');
-            sb.append(String.format(Locale.ENGLISH, "%.1f\u00B0C", temperature / 10f));
+            separator(sb);
+            sb.append(String.format(Locale.ENGLISH, "RAM %.1f GB", availableMB / 1024f));
         }
         return sb.toString();
+    }
+
+    private static void separator(StringBuilder sb) {
+        if (sb.length() > 0) sb.append("  \u00B7  ");
     }
 
     private static long readMemAvailableMB() {

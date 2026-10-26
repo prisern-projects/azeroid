@@ -2,7 +2,7 @@
 <resources>
     <color name="window_background_color">@color/wehavephones_surface</color>
     <color name="colorPrimary">@color/wehavephones_accent</color>
-    <color name="colorPrimaryDark">#1265BB</color>
+    <color name="colorPrimaryDark">#C99A2E</color>
     <color name="colorAccent">@color/wehavephones_accent</color>
     <color name="toolbar_background">@color/wehavephones_background</color>
     <color name="toolbar_title_color">@color/wehavephones_on_shell</color>
@@ -19,7 +19,7 @@
         <item name="android:windowBackground">@color/window_background_color</item>
         <item name="android:colorBackground">@color/wehavephones_surface</item>
         <item name="android:statusBarColor">@color/wehavephones_background</item>
-        <item name="android:navigationBarColor">#071C39</item>
+        <item name="android:navigationBarColor">#0E1116</item>
         <item name="android:textColorPrimary">@color/wehavephones_text</item>
         <item name="android:textColorSecondary">@color/wehavephones_text_dim</item>
         <item name="android:textColorHint">@color/wehavephones_text_dim</item>
@@ -107,7 +107,7 @@
         <item name="android:paddingLeft">6dp</item>
         <item name="android:paddingRight">6dp</item>
         <item name="android:layout_marginLeft">8dp</item>
-        <item name="android:fontFamily">@font/wehavephones_lcd</item>
+        <item name="android:fontFamily">@font/azeroid_display</item>
         <item name="android:letterSpacing">0.06</item>
         <item name="android:textColor">@color/wehavephones_accent</item>
     </style>

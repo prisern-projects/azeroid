@@ -10,7 +10,7 @@
         <item name="android:colorBackground">@color/wehavephones_surface</item>
         <item name="android:statusBarColor">@color/wehavephones_background</item>
         <item name="android:windowFullscreen">true</item>
-        <item name="android:navigationBarColor">#071C39</item>
+        <item name="android:navigationBarColor">#0E1116</item>
         <item name="android:textColorPrimary">@color/wehavephones_text</item>
         <item name="android:textColorSecondary">@color/wehavephones_text_dim</item>
         <item name="android:textColorHint">@color/wehavephones_text_dim</item>
@@ -66,7 +66,7 @@
     <style name="WeHavePhonesHeader">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:fontFamily">@font/wehavephones_lcd</item>
+        <item name="android:fontFamily">@font/azeroid_display</item>
         <item name="android:textColor">@color/wehavephones_text_title</item>
         <item name="android:textSize">28sp</item>
         <item name="android:includeFontPadding">false</item>
@@ -166,7 +166,7 @@
     </style>
     <style name="WeHavePhonesRailItem">
         <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">40dp</item>
+        <item name="android:layout_height">46dp</item>
         <item name="android:layout_marginTop">3dp</item>
         <item name="android:background">@drawable/wehavephones_rail_item</item>
         <item name="android:gravity">center_vertical</item>

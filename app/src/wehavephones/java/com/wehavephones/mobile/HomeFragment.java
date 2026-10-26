@@ -168,7 +168,7 @@ public class HomeFragment extends Fragment {
     private void tintCrest(int accent, String letter) {
         Drawable gem = crestGem.getBackground().mutate();
         gem.setTintMode(PorterDuff.Mode.MULTIPLY);
-        gem.setTint(0xFF0D315A);
+        gem.setTint(0xFFFFFFFF);
         crestLetter.setText(letter);
     }
 
@@ -236,7 +236,14 @@ public class HomeFragment extends Fragment {
         playIcon.setImageResource(blocked ? R.drawable.wehavephones_ic_setup : R.drawable.wehavephones_ic_play_fill);
         playLabel.setText(blocked ? R.string.wehavephones_finish_setup : game == null ? R.string.wehavephones_open_bnet
                 : !game.installed ? R.string.wehavephones_install : R.string.wehavephones_play);
-        playLabel.setTextSize(blocked ? 22 : game == null ? 18 : 26);
+        boolean play = !blocked && game != null && game.installed;
+        playLabel.setTextSize(play ? 32 : 20);
+        playLabel.setAllCaps(play);
+        playLabel.setLetterSpacing(play ? 0.18f : 0f);
+        // Gold Play carries dark ink; the dark red "Finish setup" needs light text.
+        int ink = playLabel.getContext().getColor(blocked ? R.color.wehavephones_error : R.color.wehavephones_key_text);
+        playLabel.setTextColor(ink);
+        playIcon.setColorFilter(ink);
     }
 
     private void renderSetupState() {

@@ -25,6 +25,6 @@
         android:layout_height="wrap_content"
         android:ellipsize="end"
         android:maxLines="1"
-        android:textColor="#A9BDCD"
+        android:textColor="#8E98A6"
         android:textSize="11sp" />
 </LinearLayout>
