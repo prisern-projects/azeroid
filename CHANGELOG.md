@@ -2,6 +2,12 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.3.5] - 2026-10-26
+
+- Diagnostics: new *WoW game account settings* section. It shows where Battle.net and WoW store the chosen
+  game account (WoW1, WoW2, ...), with email addresses hidden. This is the first step toward Azeroid always
+  launching the account you pick.
+
 ## [0.3.4] - 2026-10-26
 
 - **Fixed: Battle.net hung when switching the WoW account** (for example WoW1 → WoW2). Since 0.2.2 Battle.net

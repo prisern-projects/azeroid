@@ -118,6 +118,9 @@ public final class WeHavePhonesDiagnostics {
         }
         else builder.append("No main-client log found\n");
 
+        builder.append("\n-- WoW game account settings --\n");
+        builder.append(GameAccountProbe.describe(status.container));
+
         builder.append("\n-- Last one-button launch --\n");
         builder.append(OneButtonLauncher.lastRunSummary(context));
 
