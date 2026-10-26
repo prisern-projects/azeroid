@@ -2,6 +2,13 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.3.12] - 2026-10-26
+
+- **Paste, new route.** In-game menu → *Paste into game* now writes the phone's clipboard to a file, runs
+  Wine's own `clip` once to put it on the Windows clipboard inside Wine (as copying on a PC would), then presses
+  Ctrl+V once. One command and one key press, so no lag or heat. clipboard.log showed why the previous route
+  stalled: Wine listed the formats but never fetched the text.
+
 ## [0.3.11] - 2026-10-26
 
 - **Removed the on-screen PASTE and TYPE buttons.** TYPE flooded the game with key presses and made the phone
