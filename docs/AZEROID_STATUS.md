@@ -54,6 +54,10 @@ performance, and specifically **smoother than WeHavePhones**. Tuning targets thi
 - CPU placement A/B (0.2.6, Stormwind AH↔bank, 1280x720, warm windows only): on = avg 50.1 FPS,
   1% lows 38.7, 1 hitch over 50 ms in 5 windows. Off = avg 47.9, 1% lows 34.2, 6 hitches in 7 windows.
   Modest but consistent, so it stays on by default. Stormwind is game-bound (`game=` equals the screen) at about 48 FPS.
+- Stormwind GPU-bound: 576p gave +46% FPS over 720p (73 vs 50 FPS).
+- **Turnip Gen8 V37 on the Adreno 840 isn't usable (Oct 2026).** WoW's world textures came out as noise (BCn
+  path with WRAPPER_EMULATE_BCN=3 plus Turnip), it was stuck at 60 FPS, and most launches stalled before Play.
+  The heap shows 8.3 GB vs 11 GB on the system driver. Stay on the system driver; retest newer Turnip builds later.
 - **Don't request a display mode or frame rate** (`preferredDisplayModeId`, `Surface.setFrameRate`) on the
   S26 Ultra. In 0.2.4 it switched the panel resolution and the X-server output ended up small in the corner at
   60 FPS. Reverted in 0.2.5. 120 Hz comes from Samsung's Motion smoothness = Adaptive.
