@@ -69,7 +69,7 @@ public final class CpuPlacement {
             FrameTimeLogger.setTag("cpu=unavailable");
             return;
         }
-        FrameTimeLogger.setTag("cpu=prime");
+        FrameTimeLogger.setTag("cpu=prime[waiting-for-wow]");
         active = new CpuPlacement(masks[0], masks[1]);
         active.thread.start();
     }

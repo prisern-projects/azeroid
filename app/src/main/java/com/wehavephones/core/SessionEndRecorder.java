@@ -42,7 +42,8 @@ public final class SessionEndRecorder {
     public static void record(Context context, int status) {
         if (context == null) return;
         String line = describe(status);
-        prefs(context).edit().putString(KEY_LAST, line).apply();
+        // commit(): the app restarts itself with Runtime.exit right after a session ends, which drops apply().
+        prefs(context).edit().putString(KEY_LAST, line).commit();
     }
 
     public static String lastSummary(Context context) {

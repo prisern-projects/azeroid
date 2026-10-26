@@ -2,6 +2,13 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.2.7] - 2026-10-26
+
+- **Fixed:** Diagnostics' "Last session end" was never saved, because the app restarts itself right after a
+  session ends and the note was still being written. It is now saved before the restart.
+- Frame log says `cpu=prime[waiting-for-wow]` until WoW's threads have been placed, so a session where WoW
+  never started can't be mistaken for one where pinning ran.
+
 ## [0.2.6] - 2026-10-26
 
 - **WoW's main threads on the fastest cores.** Every 3 seconds Azeroid measures which WoW threads use the
