@@ -45,6 +45,12 @@ performance, and specifically **smoother than WeHavePhones**. Tuning targets thi
 - Diagnostics now has "Last session end" (exit status, RAM and swap at exit) and "Android exit reasons"
   (`SessionEndRecorder`). Check these first for any "it closed back to the app" report.
 
+- Perf baseline (0.2.3, Classic Era, 1024x576, double buffering): about 100 FPS average, 1% lows about 77 FPS,
+  no spikes after loading. Display is 120 Hz, so the target is a locked 120.
+- **Don't request a display mode or frame rate** (`preferredDisplayModeId`, `Surface.setFrameRate`) on the
+  S26 Ultra. In 0.2.4 it switched the panel resolution and the X-server output ended up small in the corner at
+  60 FPS. Reverted in 0.2.5. 120 Hz comes from Samsung's Motion smoothness = Adaptive.
+
 ## Lessons from 0.1.x (Ludashi engine), so they aren't relearned
 
 - Engine X server bug: `SysVSharedMemory.delete()` was unsynchronised, causing a ClassCastException crash (fixed in 0.1.3).
