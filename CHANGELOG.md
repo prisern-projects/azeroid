@@ -2,6 +2,12 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.3.17] - 2026-10-26
+
+- **Right stick responds from a small push again.** 0.3.16's squared curve stayed under WoW's own dead zone
+  until the stick was nearly at the edge. The camera now starts turning just past the stick's dead zone and
+  reaches full speed at about two thirds of travel, half as twitchy as the left stick's curve.
+
 ## [0.3.16] - 2026-10-26
 
 - **Right stick moved and calmed down.** It now sits where ABXY were, mirroring the left stick, and ABXY

@@ -660,9 +660,10 @@ public class ControlElement {
                     Binding binding = getBindingAt(i);
                     if (binding.isGamepad()) {
                         if (binding.isRightThumb()) {
-                            // Camera stick: full speed only at full travel, squared for fine aim.
+                            // Camera stick: starts just past WoW's own dead zone, full speed at two thirds of travel
+                            // (the left stick's 3x reaches full at a third, too twitchy for the camera).
                             float travel = Math.max(0, (Math.abs(value) - STICK_DEAD_ZONE) / (1 - STICK_DEAD_ZONE));
-                            value = travel * travel * Mathf.sign(value);
+                            value = travel > 0 ? Math.min(1, 0.25f + travel * 1.1f) * Mathf.sign(value) : 0;
                         }
                         else value = Mathf.clamp(Math.max(0, Math.abs(value) - 0.01f) * Mathf.sign(value) * STICK_SENSITIVITY, -1, 1);
                         inputControlsView.handleInputEvent(binding, true, value);
