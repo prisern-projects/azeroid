@@ -427,6 +427,17 @@ public class InputControlsView extends View {
         if (onPasteListener != null) post(onPasteListener);
     }
 
+    private Runnable onTypeListener;
+
+    /** The on-screen TYPE button: types the phone's clipboard as key presses. */
+    public void setOnTypeListener(Runnable listener) {
+        onTypeListener = listener;
+    }
+
+    public void requestType() {
+        if (onTypeListener != null) post(onTypeListener);
+    }
+
     public void handleInputEvent(Binding binding, boolean isActionDown) {
         handleInputEvent(binding, isActionDown, 0);
     }

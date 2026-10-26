@@ -736,6 +736,10 @@ public class ControlElement {
             if (down) inputControlsView.requestPaste();
             return;
         }
+        if ("TYPE".equals(text)) {
+            if (down) inputControlsView.requestType();
+            return;
+        }
         if (down) {
             for (int i = 0; i < bindings.length; i++) {
                 if (i == 0 || bindings[i] != Binding.NONE) inputControlsView.handleInputEvent(getBindingAt(i), true);

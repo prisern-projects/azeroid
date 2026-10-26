@@ -929,6 +929,7 @@ import java.util.concurrent.Executors;
 
         inputControlsView = new InputControlsView(this);
         inputControlsView.setOnPasteListener(this::pasteIntoGame);
+        inputControlsView.setOnTypeListener(this::typeClipboardIntoGame);
         inputControlsView.setOverlayOpacity(preferences.getFloat("overlay_opacity", InputControlsView.DEFAULT_OVERLAY_OPACITY));
         inputControlsView.setTouchpadView(touchpadView);
         inputControlsView.setXServer(xServer);
@@ -1973,6 +1974,7 @@ import java.util.concurrent.Executors;
             return;
         }
         final String value = text.toString();
+        com.wehavephones.xserver.ClipboardLog.log("Paste pressed: " + value.length() + " chars; server takes CLIPBOARD, then Ctrl+V");
         try (XLock lock = xServer.lock(XServer.Lockable.WINDOW_MANAGER)) {
             xServer.selectionManager.setServerText(com.wehavephones.xserver.Atom.internAtom("CLIPBOARD"),
                     xServer.windowManager.rootWindow, value, (int)android.os.SystemClock.uptimeMillis());
@@ -1984,6 +1986,40 @@ import java.util.concurrent.Executors;
             xServer.injectKeyRelease(XKeycode.KEY_V);
             xServer.injectKeyRelease(XKeycode.KEY_CTRL_L);
         }, 250);
+    }
+
+    /**
+     * Fallback paste that needs no clipboard at all: the text goes in as ordinary key presses,
+     * a few hundred characters per frame so the game keeps up. Call on the UI thread.
+     */
+    public void typeClipboardIntoGame() {
+        android.content.ClipboardManager clipboard = (android.content.ClipboardManager)getSystemService(CLIPBOARD_SERVICE);
+        android.content.ClipData clip = clipboard != null ? clipboard.getPrimaryClip() : null;
+        CharSequence text = clip != null && clip.getItemCount() > 0 ? clip.getItemAt(0).coerceToText(this) : null;
+        if (text == null || text.length() == 0) {
+            android.widget.Toast.makeText(this, R.string.azeroid_paste_empty, android.widget.Toast.LENGTH_SHORT).show();
+            return;
+        }
+        final String value = text.toString().replace("\r", "").replace("\n", "");
+        com.wehavephones.xserver.ClipboardLog.log("Type clipboard: " + value.length() + " chars as key presses");
+        final KeyCharacterMap map = KeyCharacterMap.load(KeyCharacterMap.VIRTUAL_KEYBOARD);
+        final int chunk = 200;
+        final int[] position = {0};
+        Runnable step = new Runnable() {
+            @Override
+            public void run() {
+                if (isFinishing() || position[0] >= value.length()) return;
+                int end = Math.min(value.length(), position[0] + chunk);
+                for (int i = position[0]; i < end; i++) {
+                    KeyEvent[] events = map.getEvents(new char[]{value.charAt(i)});
+                    if (events == null) continue;
+                    for (KeyEvent event : events) xServer.keyboard.onKeyEvent(event);
+                }
+                position[0] = end;
+                xServerView.postDelayed(this, 16);
+            }
+        };
+        xServerView.postDelayed(step, 250);
     }
 
     public WinHandler getWinHandler() {

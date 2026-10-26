@@ -2,6 +2,14 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.3.10] - 2026-10-26
+
+- **TYPE button** (on-screen controller, next to PASTE; also in the in-game menu as *Type clipboard into game*).
+  It types the phone's clipboard into the selected WoW text box as ordinary key presses, like a hardware
+  keyboard, so it doesn't depend on Wine's clipboard. Long import strings take a few seconds.
+- **Clipboard log** (`Download/WeHavePhones/clipboard.log`): records each PASTE and every clipboard request
+  Wine makes, to find out why PASTE (0.3.9) still doesn't arrive.
+
 ## [0.3.9] - 2026-10-26
 
 - **Paste, take 3.** 0.3.8's Ctrl+V reached WoW, but Wine never received the phone's clipboard (the built-in
