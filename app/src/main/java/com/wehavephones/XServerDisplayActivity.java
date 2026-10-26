@@ -95,7 +95,6 @@ import com.wehavephones.xserver.ScreenInfo;
 import com.wehavephones.xserver.Window;
 import com.wehavephones.xserver.WindowManager;
 import com.wehavephones.xserver.XKeycode;
-import com.wehavephones.xserver.XLock;
 import com.wehavephones.xserver.XServer;
 import com.wehavephones.xserver.extensions.PresentExtension;
 

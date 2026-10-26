@@ -2,6 +2,13 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.3.14] - 2026-10-26
+
+- **Back to the 0.3.6 code**, the last version before the paste attempts. Every paste change is undone (the
+  X server clipboard code and the button key combos). The only things kept from after 0.3.6 are the
+  clean-ups: no graphics-driver chooser on the Play screen, no *Runtime* item in the side menu, no account
+  probe in Diagnostics.
+
 ## [0.3.13] - 2026-10-26
 
 - **Paste removed.** None of the routes got the phone's clipboard into WoW (Wine lists the clipboard formats

@@ -14,33 +14,15 @@ public class SelectionManager implements XResourceManager.OnResourceLifecycleLis
     public static class Selection {
         public Window owner;
         private XClient client;
-        /** Text served by the X server itself (the phone's clipboard); client is then null. */
-        public String serverText;
-
-        public boolean isServerOwned() {
-            return owner != null && client == null && serverText != null;
-        }
-
-        public XClient getClient() {
-            return client;
-        }
     }
 
     public void setSelection(int atom, Window owner, XClient client, int timestamp) {
         Selection selection = getSelection(atom);
-        // SelectionClear names the window that lost the selection.
-        if (selection.owner != null && selection.client != null && (owner == null || selection.client != client)) {
-            selection.client.sendEvent(new SelectionClear(timestamp, selection.owner, atom));
+        if (selection.owner != null && (owner == null || selection.client != client)) {
+            selection.client.sendEvent(new SelectionClear(timestamp, owner, atom));
         }
         selection.owner = owner;
         selection.client = client;
-        selection.serverText = null;
-    }
-
-    /** The X server takes CLIPBOARD with this text, so X clients (Wine) can paste the phone's clipboard. */
-    public void setServerText(int atom, Window root, String text, int timestamp) {
-        setSelection(atom, root, null, timestamp);
-        getSelection(atom).serverText = text;
     }
 
     public Selection getSelection(int atom) {

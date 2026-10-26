@@ -3,7 +3,7 @@ package com.wehavephones;
 import android.view.Menu;
 import android.view.MenuItem;
 
-/** Flavor hook for the session side menu; Azeroid adds nothing. */
+/** Flavor hook for the session side menu; WeHavePhones adds nothing (it types no credentials). */
 public final class SessionMenuExtras {
     private SessionMenuExtras() {}
 
