@@ -2,6 +2,12 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.3.16] - 2026-10-26
+
+- **Right stick moved and calmed down.** It now sits where ABXY were, mirroring the left stick, and ABXY
+  moved up to where the camera pad was, mirroring the D-pad. The camera stick no longer reaches full speed
+  at a third of its travel: speed grows with the square of how far you push, full speed only at the edge.
+
 ## [0.3.15] - 2026-10-26
 
 - **On-screen right stick works like a real stick.** It was a touchpad-style camera pad that only turned the

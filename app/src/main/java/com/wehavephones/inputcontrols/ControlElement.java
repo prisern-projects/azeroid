@@ -659,7 +659,12 @@ public class ControlElement {
                     float value = i == 1 || i == 3 ? deltaX : deltaY;
                     Binding binding = getBindingAt(i);
                     if (binding.isGamepad()) {
-                        value = Mathf.clamp(Math.max(0, Math.abs(value) - 0.01f) * Mathf.sign(value) * STICK_SENSITIVITY, -1, 1);
+                        if (binding.isRightThumb()) {
+                            // Camera stick: full speed only at full travel, squared for fine aim.
+                            float travel = Math.max(0, (Math.abs(value) - STICK_DEAD_ZONE) / (1 - STICK_DEAD_ZONE));
+                            value = travel * travel * Mathf.sign(value);
+                        }
+                        else value = Mathf.clamp(Math.max(0, Math.abs(value) - 0.01f) * Mathf.sign(value) * STICK_SENSITIVITY, -1, 1);
                         inputControlsView.handleInputEvent(binding, true, value);
                         this.states[i] = true;
                     }

@@ -112,6 +112,10 @@ public enum Binding {
         return name().startsWith("GAMEPAD_");
     }
 
+    public boolean isRightThumb() {
+        return name().startsWith("GAMEPAD_RIGHT_THUMB_");
+    }
+
     public boolean isMouseMove() {
         return this == MOUSE_MOVE_UP || this == MOUSE_MOVE_RIGHT || this == MOUSE_MOVE_DOWN || this == MOUSE_MOVE_LEFT;
     }
