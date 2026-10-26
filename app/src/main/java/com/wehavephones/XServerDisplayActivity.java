@@ -1957,6 +1957,11 @@ import java.util.concurrent.Executors;
         return xServer;
     }
 
+    /** Types text into the focused game text box through the IME bridge; false when the bridge is not up. */
+    public boolean pasteIntoGame(String text) {
+        return winHandler != null && winHandler.imeCommitLongText(text);
+    }
+
     public WinHandler getWinHandler() {
         return winHandler;
     }

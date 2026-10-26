@@ -48,7 +48,10 @@ final class DriverPicker {
             host.runOnUiThread(() -> {
                 if (!fragment.isAdded()) return;
                 rows = loaded;
-                section.setVisibility(loaded.size() > 2 ? View.VISIBLE : View.GONE);
+                // Azeroid: the alternative (Turnip) drivers are broken on the Adreno 840, so the
+                // picker only shows while a non-automatic driver is picked, to switch back.
+                boolean automatic = !loaded.isEmpty() && loaded.get(0).selected;
+                section.setVisibility(loaded.size() > 2 && !automatic ? View.VISIBLE : View.GONE);
                 for (DriverChoiceAdapter.Row row : loaded) {
                     if (row.selected) value.setText(row.name);
                 }

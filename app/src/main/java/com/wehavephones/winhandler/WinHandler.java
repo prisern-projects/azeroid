@@ -185,6 +185,23 @@ public class WinHandler {
         return imeCommitText(text, false);
     }
 
+    /**
+     * Text longer than one IME packet (addon import strings run to tens of thousands of
+     * characters), sent as consecutive packets in order. Chunks never split a surrogate pair.
+     */
+    public boolean imeCommitLongText(String text) {
+        if (text == null || text.isEmpty() || !initReceived || !liteReady) return false;
+        final int maxChars = LITE_MAX_UTF16_BYTES / 2 - 16;
+        int start = 0;
+        while (start < text.length()) {
+            int end = Math.min(text.length(), start + maxChars);
+            if (end < text.length() && Character.isHighSurrogate(text.charAt(end - 1))) end--;
+            if (!imeCommitText(text.substring(start, end), false)) return false;
+            start = end;
+        }
+        return true;
+    }
+
     public boolean imeCommitText(String text, boolean submit) {
         if (!initReceived || !liteReady) return false;
         if (text == null) text = "";

@@ -2,6 +2,16 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.3.7] - 2026-10-26
+
+- **Paste into game.** In-game menu (swipe from the left edge / back gesture) → *Paste into game*. It types
+  the phone's clipboard into the text box that has focus in WoW, for example an addon's import field. Tap the
+  box first, copy the import string on the phone, then choose *Paste into game*. Long strings (tens of
+  thousands of characters) are sent in pieces.
+- **Less clutter:** the graphics-driver chooser is gone from the Play screen (the alternative drivers don't
+  work on the Adreno 840; it only shows again if a non-automatic driver is picked, so you can switch back).
+  The technical *Runtime* item is gone from the side menu, and so is 0.3.5–0.3.6's account probe in Diagnostics.
+
 ## [0.3.6] - 2026-10-26
 
 - Diagnostics, *WoW game account settings*: now also lists Battle.net files changed in the last 15 minutes

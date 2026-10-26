@@ -82,6 +82,7 @@
             <TextView
                 android:id="@+id/RailRuntime"
                 style="@style/WeHavePhonesRailTool"
+                android:visibility="gone"
                 android:drawableStart="@drawable/wehavephones_ic_runtime"
                 android:text="@string/wehavephones_runtime" />
             <TextView
