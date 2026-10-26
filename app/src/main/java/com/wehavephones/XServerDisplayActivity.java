@@ -1704,9 +1704,11 @@ import java.util.concurrent.Executors;
     }
 
     /**
-     * Clean rebuild of the default DXVK's aarch64 (system32) DLLs, whose bundled
-     * copies log SWAPTRACE lines on every frame. Made by
-     * scripts/build-arm-graphics-dlls-docker.sh --package-dxvk.
+     * Replaces the default DXVK's aarch64 (system32) DLLs, whose bundled copies
+     * log SWAPTRACE lines on every frame, with a clean v2.3.1 + dxvk-gplasync
+     * build: the Adreno system driver has no pipeline libraries, so without the
+     * async patch WoW compiles shaders on its render thread and hitches. Made by
+     * scripts/build-arm-graphics-dlls-docker.sh --gplasync --package-dxvk.
      */
     private static String getDxvkAarch64Overlay(String ver) {
         return "2.3.1-arm64ec-gplasync".equals(ver) ? "dxwrapper/aarch64/dxvk-2.3.1.tzst" : null;
@@ -1717,7 +1719,7 @@ import java.util.concurrent.Executors;
         if (dxwrapper.startsWith("dxvk")) {
             String ver = resolveDxvkVersion();
             // A new cache id makes existing containers extract the overlay.
-            if (getDxvkAarch64Overlay(ver) != null) ver += "+aarch64-notrace";
+            if (getDxvkAarch64Overlay(ver) != null) ver += "+aarch64-gplasync";
             if (dxwrapper.equals("dxvk+vkd3d")) {
                 // Vanilla default: dxvk enabled, vkd3d not installed (vkd3dVersion=None).
                 return "dxvk-" + ver + ";vkd3d-None";
