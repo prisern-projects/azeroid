@@ -68,6 +68,13 @@ public class WeHavePhonesSettingsFragment extends Fragment {
             WeHavePhonesConfig.setPerformanceOverlay(activity, checked);
             activity.updateStageStatus(getString(R.string.wehavephones_settings_saved), false);
         });
+
+        CheckBox primeCores = view.findViewById(R.id.CBPrimeCores);
+        primeCores.setChecked(WeHavePhonesConfig.isPrimeCores(activity));
+        primeCores.setOnCheckedChangeListener((button, checked) -> {
+            WeHavePhonesConfig.setPrimeCores(activity, checked);
+            activity.updateStageStatus(getString(R.string.wehavephones_settings_saved), false);
+        });
     }
 
     private void setUpGamePreferences(View view) {

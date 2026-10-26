@@ -2,6 +2,14 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.2.6] - 2026-10-26
+
+- **WoW's main threads on the fastest cores.** Every 3 seconds Azeroid measures which WoW threads use the
+  most CPU. The two busiest (in practice the main and render threads) go on the phone's two prime cores, and
+  WoW's other threads are kept off them. The goal is better 1% lows in busy places like cities.
+  Settings → *Run WoW's main threads on the fastest cores* (on by default) turns it off for A/B comparison.
+- The frame log tags each line with the mode: `cpu=prime[6-7,6-7]` (the cores actually in use) or `cpu=auto`.
+
 ## [0.2.5] - 2026-10-26
 
 - **Fixed:** 0.2.4's request for the screen's 120 Hz mode made Samsung switch the display to another

@@ -94,6 +94,11 @@
                     android:layout_height="wrap_content"
                     android:text="@string/wehavephones_settings_performance_overlay" />
                 <CheckBox
+                    android:id="@+id/CBPrimeCores"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/azeroid_settings_prime_cores" />
+                <CheckBox
                     android:id="@+id/CBDisableVirtualGamepad"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"

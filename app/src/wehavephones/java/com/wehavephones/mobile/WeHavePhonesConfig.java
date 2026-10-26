@@ -17,6 +17,7 @@ public final class WeHavePhonesConfig {
     public static final String KEY_PRODUCT_DIR = "wehavephones_product_dir";
     public static final String KEY_LAST_STAGE_STATUS = "wehavephones_last_stage_status";
     public static final String KEY_PERFORMANCE_OVERLAY = "wehavephones_performance_overlay";
+    public static final String KEY_PRIME_CORES = "azeroid_prime_cores";
     public static final String KEY_DISABLE_VIRTUAL_GAMEPAD = "wehavephones_disable_virtual_gamepad";
     public static final String KEY_KEEP_RUNNING_IN_BACKGROUND = "wehavephones_keep_running_in_background";
     public static final String KEY_START_INPUT_BRIDGE = "wehavephones_start_input_bridge";
@@ -117,6 +118,15 @@ public final class WeHavePhonesConfig {
 
     public static void setPerformanceOverlay(Context context, boolean enabled) {
         prefs(context).edit().putBoolean(KEY_PERFORMANCE_OVERLAY, enabled).apply();
+    }
+
+    /** Put WoW's busiest threads on the prime cores (default on). */
+    public static boolean isPrimeCores(Context context) {
+        return prefs(context).getBoolean(KEY_PRIME_CORES, true);
+    }
+
+    public static void setPrimeCores(Context context, boolean enabled) {
+        prefs(context).edit().putBoolean(KEY_PRIME_CORES, enabled).apply();
     }
 
     public static boolean isVirtualGamepadDisabled(Context context) {

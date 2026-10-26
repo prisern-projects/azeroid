@@ -91,10 +91,12 @@ public final class SessionLaunchExtras {
     /** The session's views exist: Play's launch overlay goes on top of them. */
     public static void onSessionViewsCreated(XServerDisplayActivity activity, ViewGroup root) {
         LaunchOverlayController.attach(activity, root);
+        com.wehavephones.mobile.CpuPlacement.start(WeHavePhonesConfig.isPrimeCores(activity));
     }
 
     /** Cancel the launch before stopping Wine so exit cannot look like a launch failure. */
     public static void onSessionEnded(XServerDisplayActivity activity) {
+        com.wehavephones.mobile.CpuPlacement.stop();
         com.wehavephones.mobile.OneButtonLauncher.cancelActive();
         WeHavePhonesConfig.clearLastStageStatusForSessionExit(activity);
         LaunchOverlayController.onSessionEnded();
