@@ -47,6 +47,10 @@ SKIP_DXVK=0
 SKIP_VKD3D=0
 SWAPTRACE=0
 PACKAGE_DXVK=0
+GPLASYNC=0
+# dxvk-gplasync (Ph42oN, LGPL-2.1/zlib like DXVK), pinned: compiles pipelines on worker threads
+# instead of the render thread when graphics pipeline libraries are missing (Adreno system driver).
+GPLASYNC_PATCH_URL="https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/04e50ed2c4dee43e64d30119b2c5b26a23e2b6a4/patches/dxvk-gplasync-2.3.1-1.patch"
 DXVK_OVERLAY="app/src/main/assets/dxwrapper/aarch64/dxvk-2.3.1.tzst"
 RECREATE_CONTAINER=0
 
@@ -63,6 +67,7 @@ Options:
   --skip-dxvk               Build only vkd3d-proton
   --skip-vkd3d              Build only dxvk
   --swaptrace               Add the per-frame SWAPTRACE debug logging (debugging only)
+  --gplasync                Apply the pinned dxvk-gplasync patch (async pipeline compilation)
   --package-dxvk            Pack the DXVK DLLs into the app's aarch64 overlay
                             (app/src/main/assets/dxwrapper/aarch64/dxvk-2.3.1.tzst)
   --docker-image <image>    Default: ubuntu:22.04 (or env DOCKER_IMAGE)
@@ -97,6 +102,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --package-dxvk)
       PACKAGE_DXVK=1
+      shift
+      ;;
+    --gplasync)
+      GPLASYNC=1
       shift
       ;;
     --docker-image)
@@ -577,6 +586,11 @@ if [[ "${SKIP_DXVK}" != "1" ]]; then
     apply_dxvk_swaptrace_patch "${DXVK_SRC}"
   fi
 
+  if [[ "${GPLASYNC}" == "1" ]]; then
+    echo "==> Applying dxvk-gplasync patch"
+    git -C "${DXVK_SRC}" apply --whitespace=nowarn /work/out/_gplasync.patch
+  fi
+
   # Newer llvm-mingw d3d9 headers already define D3DDEVINFO_RESOURCEMANAGER.
   # DXVK v2.3.1 carries an old MinGW fallback typedef that then causes redefinition.
   # Keep behavior for other toolchains but disable the fallback on MinGW.
@@ -668,13 +682,18 @@ BUILD_SCRIPT_EOF
 
 chmod +x "${build_script_abs}"
 
+if [[ "${GPLASYNC}" -eq 1 ]]; then
+  mkdir -p out
+  curl -L --fail -sS -o out/_gplasync.patch "${GPLASYNC_PATCH_URL}"
+fi
+
 docker exec -t \
   -e "https_proxy=${https_proxy-}" -e "http_proxy=${http_proxy-}" -e "no_proxy=${no_proxy-}" \
   -e "HTTPS_PROXY=${HTTPS_PROXY-}" -e "HTTP_PROXY=${HTTP_PROXY-}" -e "NO_PROXY=${NO_PROXY-}" \
   -e "DXVK_REPO_URL=${DXVK_REPO_URL}" -e "DXVK_VERSION=${DXVK_VERSION}" \
   -e "VKD3D_REPO_URL=${VKD3D_REPO_URL}" -e "VKD3D_VERSION=${VKD3D_VERSION}" \
   -e "TOOLCHAIN_TAR=${TOOLCHAIN_TAR}" -e "TOOLCHAIN_URL=${TOOLCHAIN_URL}" \
-  -e "SKIP_DXVK=${SKIP_DXVK}" -e "SKIP_VKD3D=${SKIP_VKD3D}" -e "SWAPTRACE=${SWAPTRACE}" \
+  -e "SKIP_DXVK=${SKIP_DXVK}" -e "SKIP_VKD3D=${SKIP_VKD3D}" -e "SWAPTRACE=${SWAPTRACE}" -e "GPLASYNC=${GPLASYNC}" \
   -e "VKD3D_WINE_ARM64_WORKAROUND=${VKD3D_WINE_ARM64_WORKAROUND:-0}" \
   "${DOCKER_CONTAINER_NAME}" \
   bash "/work/${build_script_rel}"

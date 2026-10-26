@@ -1,0 +1,55 @@
+name: DXVK aarch64 (gplasync)
+
+# Builds WoW's aarch64 DXVK overlay (DXVK v2.3.1 + dxvk-gplasync) and publishes it
+# as a pre-release asset. The overlay is then committed to
+# app/src/main/assets/dxwrapper/aarch64/dxvk-2.3.1.tzst.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - scripts/build-arm-graphics-dlls-docker.sh
+      - .github/workflows/dxvk-aarch64.yml
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build DXVK aarch64 with gplasync
+        run: |
+          set -o pipefail
+          scripts/build-arm-graphics-dlls-docker.sh --skip-vkd3d --gplasync --package-dxvk 2>&1 | tee build.log
+        continue-on-error: true
+        id: build
+
+      - name: Surface errors
+        if: steps.build.outcome != 'success'
+        run: |
+          grep -nE "error|Error|FAILED|fatal" build.log | tail -n 40 | while IFS= read -r line; do
+            echo "::error::${line:0:900}"
+          done
+          tail -n 30 build.log | while IFS= read -r line; do echo "::error::${line:0:900}"; done
+          exit 1
+
+      - name: Publish pre-release asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag=dxvk-aarch64-2.3.1-gplasync
+          asset=app/src/main/assets/dxwrapper/aarch64/dxvk-2.3.1.tzst
+          sha256sum "$asset" | tee sha256.txt
+          echo "::notice::overlay sha256 $(cut -d' ' -f1 sha256.txt)"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" "$asset" sha256.txt --clobber
+          else
+            gh release create "$tag" "$asset" sha256.txt --prerelease --target "$GITHUB_SHA" \
+              --title "DXVK aarch64 2.3.1 + gplasync" \
+              --notes "WoW's aarch64 DXVK overlay with async pipeline compilation (dxvk-gplasync 2.3.1-1). Built by dxvk-aarch64.yml."
+          fi
