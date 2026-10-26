@@ -2,6 +2,14 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.3.1] - 2026-10-26
+
+- **Azeroid on-screen controller.** The built-in Virtual Gamepad has a new layout and look: a full Xbox layout
+  (LT/LB and RT/RB in the top corners, D-pad, a large left stick, a camera stick, ABXY in Xbox colours, View and
+  Menu at the bottom centre), sized for the 6.9" screen. Buttons are translucent dark with a white rim, light up
+  gold while pressed, and are labelled LB/RB/LT/RT. Like before it only shows while WoW runs and no controller
+  is connected; connecting the G8 hides it. Overlay opacity still applies. Your own custom layouts are not changed.
+
 ## [0.3.0] - 2026-10-26
 
 - **Azeroid's own look.** Dark ink background, slate panels and one gold accent, with the Cinzel "AZEROID"

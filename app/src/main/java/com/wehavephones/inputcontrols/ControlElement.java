@@ -2,6 +2,7 @@ package com.wehavephones.inputcontrols;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PointF;
@@ -341,6 +342,11 @@ public class ControlElement {
     }
 
     public void draw(Canvas canvas) {
+        ControlsProfile profile = inputControlsView.getProfile();
+        if (profile != null && profile.isVirtualGamepad()) {
+            drawAzeroidGamepad(canvas);
+            return;
+        }
         int snappingSize = inputControlsView.getSnappingSize();
         Paint paint = inputControlsView.getPaint();
         int primaryColor = inputControlsView.getPrimaryColor();
@@ -756,5 +762,123 @@ public class ControlElement {
             return true;
         }
         return false;
+    }
+
+    // Azeroid's on-screen gamepad style: translucent ink pads with a white rim, ABXY in Xbox
+    // colors, gold while pressed. Overlay opacity scales everything.
+    private static final int AZ_INK = 0x0E1116;
+    private static final int AZ_GOLD = 0xF2C14E;
+
+    private int azAlpha(int rgb, float alpha) {
+        float opacity = Color.alpha(inputControlsView.getPrimaryColor()) / 255f;
+        return Color.argb(Math.round(255 * alpha * opacity), Color.red(rgb), Color.green(rgb), Color.blue(rgb));
+    }
+
+    private int azFaceColor() {
+        switch (getBindingAt(0)) {
+            case GAMEPAD_BUTTON_A: return 0x5CC97A;
+            case GAMEPAD_BUTTON_B: return 0xF06A5A;
+            case GAMEPAD_BUTTON_X: return 0x5AA0F0;
+            case GAMEPAD_BUTTON_Y: return 0xE8C547;
+            default: return 0xFFFFFF;
+        }
+    }
+
+    private String azLabel() {
+        if (text != null && !text.isEmpty()) return text;
+        switch (getBindingAt(0)) {
+            case GAMEPAD_BUTTON_L1: return "LB";
+            case GAMEPAD_BUTTON_R1: return "RB";
+            case GAMEPAD_BUTTON_L2: return "LT";
+            case GAMEPAD_BUTTON_R2: return "RT";
+            case GAMEPAD_BUTTON_L3: return "LS";
+            case GAMEPAD_BUTTON_R3: return "RS";
+            default: return getDisplayText();
+        }
+    }
+
+    private void drawAzeroidGamepad(Canvas canvas) {
+        int snappingSize = inputControlsView.getSnappingSize();
+        Paint paint = inputControlsView.getPaint();
+        Rect box = getBoundingBox();
+        float cx = box.centerX(), cy = box.centerY();
+        float stroke = snappingSize * 0.22f;
+        boolean pressed = currentPointerId != -1;
+        int rim = selected ? AZ_GOLD : type == Type.BUTTON ? azFaceColor() : 0xFFFFFF;
+        int fill = pressed ? azAlpha(AZ_GOLD, 0.45f) : azAlpha(AZ_INK, 0.45f);
+        paint.setStrokeWidth(stroke);
+
+        switch (type) {
+            case BUTTON:
+            case RANGE_BUTTON: {
+                Path path = inputControlsView.getPath();
+                path.reset();
+                if (shape == Shape.CIRCLE) path.addCircle(cx, cy, box.width() * 0.5f, Path.Direction.CW);
+                else {
+                    float radius = shape == Shape.RECT ? box.height() * 0.28f : box.height() * 0.5f;
+                    path.addRoundRect(box.left, box.top, box.right, box.bottom, radius, radius, Path.Direction.CW);
+                }
+                paint.setStyle(Paint.Style.FILL);
+                paint.setColor(fill);
+                canvas.drawPath(path, paint);
+                paint.setStyle(Paint.Style.STROKE);
+                paint.setColor(azAlpha(rim, 0.85f));
+                canvas.drawPath(path, paint);
+                if (iconId > 0) {
+                    drawIcon(canvas, cx, cy, box.width(), box.height(), iconId);
+                }
+                else {
+                    String label = azLabel();
+                    paint.setStyle(Paint.Style.FILL);
+                    paint.setTextAlign(Paint.Align.CENTER);
+                    paint.setFakeBoldText(true);
+                    paint.setTextSize(Math.min(getTextSizeForWidth(paint, label, box.width() * 0.62f), box.height() * 0.42f));
+                    paint.setColor(azAlpha(type == Type.BUTTON && azFaceColor() != 0xFFFFFF ? azFaceColor() : 0xFFFFFF, 1f));
+                    canvas.drawText(label, cx, cy - (paint.descent() + paint.ascent()) * 0.5f, paint);
+                    paint.setFakeBoldText(false);
+                }
+                break;
+            }
+            case D_PAD: {
+                // Four separate arms, each lit while its direction is held.
+                float arm = box.width() / 3f;
+                float r = arm * 0.22f;
+                float[][] arms = {
+                        {box.left + arm, box.top, box.left + 2 * arm, box.top + arm * 1.15f},
+                        {box.left + arm * 1.85f, box.top + arm, box.right, box.top + 2 * arm},
+                        {box.left + arm, box.bottom - arm * 1.15f, box.left + 2 * arm, box.bottom},
+                        {box.left, box.top + arm, box.left + arm * 1.15f, box.top + 2 * arm}};
+                for (int i = 0; i < 4; i++) {
+                    float[] a = arms[i];
+                    paint.setStyle(Paint.Style.FILL);
+                    paint.setColor(states[i] ? azAlpha(AZ_GOLD, 0.45f) : azAlpha(AZ_INK, 0.45f));
+                    canvas.drawRoundRect(a[0], a[1], a[2], a[3], r, r, paint);
+                    paint.setStyle(Paint.Style.STROKE);
+                    paint.setColor(azAlpha(selected ? AZ_GOLD : 0xFFFFFF, 0.8f));
+                    canvas.drawRoundRect(a[0], a[1], a[2], a[3], r, r, paint);
+                }
+                break;
+            }
+            case STICK:
+            case TRACKPAD: {
+                float radius = Math.min(box.width(), box.height()) * 0.5f;
+                paint.setStyle(Paint.Style.FILL);
+                paint.setColor(azAlpha(AZ_INK, 0.35f));
+                canvas.drawCircle(cx, cy, radius, paint);
+                paint.setStyle(Paint.Style.STROKE);
+                paint.setColor(azAlpha(selected ? AZ_GOLD : 0xFFFFFF, 0.6f));
+                canvas.drawCircle(cx, cy, radius, paint);
+                float tx = type == Type.STICK && currentPosition != null ? currentPosition.x : cx;
+                float ty = type == Type.STICK && currentPosition != null ? currentPosition.y : cy;
+                float thumb = radius * 0.44f;
+                paint.setStyle(Paint.Style.FILL);
+                paint.setColor(pressed ? azAlpha(AZ_GOLD, 0.5f) : azAlpha(0xFFFFFF, 0.3f));
+                canvas.drawCircle(tx, ty, thumb, paint);
+                paint.setStyle(Paint.Style.STROKE);
+                paint.setColor(azAlpha(0xFFFFFF, 0.85f));
+                canvas.drawCircle(tx, ty, thumb, paint);
+                break;
+            }
+        }
     }
 }
