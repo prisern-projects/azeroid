@@ -2,6 +2,15 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.3.8] - 2026-10-26
+
+- **Paste now works like Ctrl+V.** 0.3.7 typed the clipboard into the game in pieces, and the text came out
+  repeated. Paste now sends a real Ctrl+V, and WoW reads the phone's clipboard itself through Wine, as on a PC.
+  - On-screen controller: a new **PASTE** button at the top centre.
+  - With the G8: in-game menu → *Paste into game*.
+  Tap the addon's import box first, then paste.
+- On-screen buttons can now hold a key combination: a button presses all its keys at once.
+
 ## [0.3.7] - 2026-10-26
 
 - **Paste into game.** In-game menu (swipe from the left edge / back gesture) → *Paste into game*. It types

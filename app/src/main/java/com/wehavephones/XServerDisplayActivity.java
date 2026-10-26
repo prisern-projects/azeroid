@@ -1957,9 +1957,15 @@ import java.util.concurrent.Executors;
         return xServer;
     }
 
-    /** Types text into the focused game text box through the IME bridge; false when the bridge is not up. */
-    public boolean pasteIntoGame(String text) {
-        return winHandler != null && winHandler.imeCommitLongText(text);
+    /**
+     * Ctrl+V into the game, like a keyboard: Wine then reads the phone's clipboard through
+     * WineRequestHandler and the focused text box pastes it.
+     */
+    public void pasteIntoGame() {
+        xServer.injectKeyPress(XKeycode.KEY_CTRL_L);
+        xServer.injectKeyPress(XKeycode.KEY_V);
+        xServer.injectKeyRelease(XKeycode.KEY_V);
+        xServer.injectKeyRelease(XKeycode.KEY_CTRL_L);
     }
 
     public WinHandler getWinHandler() {
