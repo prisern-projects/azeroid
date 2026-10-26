@@ -2,6 +2,13 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.2.3] - 2026-10-26
+
+- **Frame-time logging.** Every game session now writes `Download/WeHavePhones/frametimes.log`: one line every
+  30 seconds with average FPS, 1% and 0.1% lows (stutter), the worst frame and the count of frames over 50 ms,
+  plus a whole-session summary. The latest lines also appear in Diagnostics. This is the yardstick for all
+  upcoming performance work. It costs one timestamp per frame.
+
 ## [0.2.2] - 2026-10-25
 
 - **Cause found:** the WoW install "crash" is Android killing Azeroid for low memory (Diagnostics showed

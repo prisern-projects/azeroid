@@ -72,6 +72,7 @@ import com.wehavephones.inputcontrols.GamepadState;
 import com.wehavephones.math.Mathf;
 import com.wehavephones.renderer.GLRenderer;
 import com.wehavephones.widget.FrameRating;
+import com.wehavephones.core.FrameTimeLogger;
 import com.wehavephones.widget.ImeBridgeEditText;
 import com.wehavephones.widget.InputControlsView;
 import com.wehavephones.widget.MagnifierView;
@@ -156,6 +157,7 @@ import java.util.concurrent.Executors;
     private InputControlsManager inputControlsManager;
     private ImageFs imageFs;
     private FrameRating frameRating;
+    private FrameTimeLogger frameTimeLogger;
     private Runnable editInputControlsCallback;
     private Shortcut shortcut;
     private String graphicsDriver = Container.DEFAULT_GRAPHICS_DRIVER;
@@ -504,6 +506,7 @@ import java.util.concurrent.Executors;
             shutdownCompleted = true;
         }
         SessionLaunchExtras.onSessionEnded(this);
+        if (frameTimeLogger != null) frameTimeLogger.finish();
         stopSessionLogging();
         stopGuestProgramFirst();
         winHandler.stop();
@@ -936,10 +939,17 @@ import java.util.concurrent.Executors;
             frameRating.setShowDetails(performanceOverlay);
             frameRating.setVisibility(View.GONE);
             rootView.addView(frameRating);
-            // Measure actual host render FPS (not X11 content updates), otherwise Vulkan/WSI apps can
-            // report misleadingly low or spiky values depending on which window gets tracked.
-            renderer.setOnFrameRendered(frameRating::update);
         }
+        // Measure actual host render FPS (not X11 content updates), otherwise Vulkan/WSI apps can
+        // report misleadingly low or spiky values depending on which window gets tracked.
+        frameTimeLogger = new FrameTimeLogger(SessionLogs.prepareLogDir(imageFs),
+                shortcut != null ? shortcut.name.replace(' ', '_') : "session");
+        final FrameRating overlay = frameRating;
+        final FrameTimeLogger logger = frameTimeLogger;
+        renderer.setOnFrameRendered(() -> {
+            logger.onFrame();
+            if (overlay != null) overlay.update();
+        });
         SessionLaunchExtras.onSessionViewsCreated(this, rootView);
 
         if (shortcut != null) {

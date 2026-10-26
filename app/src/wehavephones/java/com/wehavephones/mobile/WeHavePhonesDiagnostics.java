@@ -121,6 +121,9 @@ public final class WeHavePhonesDiagnostics {
         builder.append("\n-- Last one-button launch --\n");
         builder.append(OneButtonLauncher.lastRunSummary(context));
 
+        builder.append("\n-- Frame times (last entries) --\n");
+        builder.append(tailLines(new File(logDir, com.wehavephones.core.FrameTimeLogger.FILE_NAME), 12)).append('\n');
+
         builder.append("\n-- Last session end --\n");
         builder.append(com.wehavephones.core.SessionEndRecorder.lastSummary(context)).append('\n');
 
@@ -241,4 +244,20 @@ public final class WeHavePhonesDiagnostics {
         }
     }
 
+
+    private static String tailLines(File file, int lines) {
+        if (!file.isFile()) return "No frame times recorded yet";
+        java.util.ArrayDeque<String> tail = new java.util.ArrayDeque<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                tail.addLast(line);
+                if (tail.size() > lines) tail.removeFirst();
+            }
+        }
+        catch (IOException e) {
+            return "Could not read " + file.getName() + ": " + e.getMessage();
+        }
+        return tail.isEmpty() ? "No frame times recorded yet" : String.join("\n", tail);
+    }
 }
