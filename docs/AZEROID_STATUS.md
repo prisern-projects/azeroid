@@ -51,6 +51,9 @@ performance, and specifically **smoother than WeHavePhones**. Tuning targets thi
   83–90 FPS**. `game=` was 140–183 FPS in places, so the game outruns the 120 Hz panel there. Remaining
   stutter is occasional single 140–500 ms hitches (1–3 per 30 s window). Next: find their cause (shader
   compiles vs streaming vs CPU), CPU placement on the prime cores, GPU driver A/B, higher resolution.
+- CPU placement A/B (0.2.6, Stormwind AH↔bank, 1280x720, warm windows only): on = avg 50.1 FPS,
+  1% lows 38.7, 1 hitch over 50 ms in 5 windows. Off = avg 47.9, 1% lows 34.2, 6 hitches in 7 windows.
+  Modest but consistent, so it stays on by default. Stormwind is game-bound (`game=` equals the screen) at about 48 FPS.
 - **Don't request a display mode or frame rate** (`preferredDisplayModeId`, `Surface.setFrameRate`) on the
   S26 Ultra. In 0.2.4 it switched the panel resolution and the X-server output ended up small in the corner at
   60 FPS. Reverted in 0.2.5. 120 Hz comes from Samsung's Motion smoothness = Adaptive.
