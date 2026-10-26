@@ -2,6 +2,15 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.2.9] - 2026-10-26
+
+- **Experiment: native texture decoding.** WoW's DXVK log shows the driver path reports BC texture support.
+  New switch in Settings: *let the graphics driver decode textures itself*. When it works this skips the
+  GPU unpacking step that the Stormwind test points at. Off by default; turn it off again if textures look
+  broken.
+- The frame log tags each line `tex=emulated` or `tex=native`, next to the CPU tag.
+- Removed 0.2.8's graphics-log switch. The wrapper never wrote the file on this phone.
+
 ## [0.2.8] - 2026-10-26
 
 - **Screen tearing fix.** The game's frame is copied into a buffer that the GPU reads directly. The X server

@@ -99,10 +99,10 @@
                     android:layout_height="wrap_content"
                     android:text="@string/azeroid_settings_prime_cores" />
                 <CheckBox
-                    android:id="@+id/CBGraphicsLogOnce"
+                    android:id="@+id/CBNativeTextures"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/azeroid_settings_graphics_log_once" />
+                    android:text="@string/azeroid_settings_native_textures" />
                 <CheckBox
                     android:id="@+id/CBDisableVirtualGamepad"
                     android:layout_width="match_parent"

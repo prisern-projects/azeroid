@@ -69,11 +69,11 @@ public class WeHavePhonesSettingsFragment extends Fragment {
             activity.updateStageStatus(getString(R.string.wehavephones_settings_saved), false);
         });
 
-        CheckBox graphicsLog = view.findViewById(R.id.CBGraphicsLogOnce);
+        CheckBox nativeTextures = view.findViewById(R.id.CBNativeTextures);
         final android.content.SharedPreferences defaults = androidx.preference.PreferenceManager.getDefaultSharedPreferences(activity);
-        graphicsLog.setChecked(defaults.getBoolean("azeroid_wrapper_log_once", false));
-        graphicsLog.setOnCheckedChangeListener((button, checked) -> {
-            defaults.edit().putBoolean("azeroid_wrapper_log_once", checked).apply();
+        nativeTextures.setChecked(defaults.getBoolean("azeroid_native_bcn", false));
+        nativeTextures.setOnCheckedChangeListener((button, checked) -> {
+            defaults.edit().putBoolean("azeroid_native_bcn", checked).apply();
             activity.updateStageStatus(getString(R.string.wehavephones_settings_saved), false);
         });
 

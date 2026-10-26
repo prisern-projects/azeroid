@@ -1418,6 +1418,14 @@ import java.util.concurrent.Executors;
             }
 
             // BCN emulation (vanilla defaults).
+            // Azeroid experiment: let the driver decode WoW's BCn textures itself instead of the
+            // wrapper's compute emulation. Settings toggle; off by default until measured.
+            boolean nativeBcn = preferences.getBoolean("azeroid_native_bcn", false);
+            if (nativeBcn) {
+                envVars.put("WRAPPER_EMULATE_BCN", "0");
+                envVars.put("ENABLE_BCN_COMPUTE", "0");
+            }
+            FrameTimeLogger.setExtraTag(nativeBcn ? "tex=native" : "tex=emulated");
             if (!envVars.has("ENABLE_BCN_COMPUTE")) envVars.put("ENABLE_BCN_COMPUTE", "1");
             if (!envVars.has("BCN_COMPUTE_AUTO")) envVars.put("BCN_COMPUTE_AUTO", "1");
             if (!envVars.has("WRAPPER_EMULATE_BCN")) envVars.put("WRAPPER_EMULATE_BCN", "3");
@@ -1429,12 +1437,7 @@ import java.util.concurrent.Executors;
             // its uploads skip the emulation, so WoW cannot draw its textures.
             if (plan != null ? plan.vulkanCompatLayer : !GPUInformation.mayBeAdreno(this)) VulkanCompatLayer.install(this, rootDir, envVars);
 
-            boolean enableWrapperLog = preferences.getBoolean("enable_wrapper_log", false)
-                    || preferences.getBoolean("azeroid_wrapper_log_once", false);
-            // Azeroid's Diagnostics switch logs one session only: the log grows fast.
-            if (preferences.getBoolean("azeroid_wrapper_log_once", false)) {
-                preferences.edit().putBoolean("azeroid_wrapper_log_once", false).apply();
-            }
+            boolean enableWrapperLog = preferences.getBoolean("enable_wrapper_log", false);
             if (enableWrapperLog) {
                 if (!envVars.has("WRAPPER_LOG_FILE")) envVars.put("WRAPPER_LOG_FILE", new File(SessionLogs.prepareLogDir(imageFs), "wrapper.log").getAbsolutePath());
                 if (!envVars.has("WRAPPER_LOG_LEVEL")) envVars.put("WRAPPER_LOG_LEVEL", preferences.getString("wrapper_log_level", "debug"));

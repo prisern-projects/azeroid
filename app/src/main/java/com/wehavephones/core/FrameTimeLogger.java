@@ -36,6 +36,16 @@ public final class FrameTimeLogger {
     private static final int SESSION_BUCKETS = 1000;
 
     private static volatile String tag = "";
+    private static volatile String extraTag = "";
+
+    /** A second label for settings that are not CPU placement (e.g. "tex=native"). */
+    public static void setExtraTag(String value) {
+        extraTag = value != null ? value : "";
+    }
+
+    private static String tags() {
+        return extraTag.isEmpty() ? tag : tag + " " + extraTag;
+    }
 
     /** A short label (e.g. "cpu=prime") added to every line, for A/B comparisons. */
     public static void setTag(String value) {
@@ -92,7 +102,7 @@ public final class FrameTimeLogger {
         writer.execute(() -> {
             if (window.length > 0) flushWindow(window, windowMs, presents);
             if (sessionFrames == 0) return;
-            append("SESSION " + label + " " + tag + " " + timestamp()
+            append("SESSION " + label + " " + tags() + " " + timestamp()
                     + String.format(Locale.US, " frames=%d avg=%.1ffps 1%%low=%.1ffps 0.1%%low=%.1ffps",
                             sessionFrames,
                             sessionFrames * 1e9 / sessionNanos,
@@ -126,7 +136,7 @@ public final class FrameTimeLogger {
         double p999 = sorted[Math.min(sorted.length - 1, (int)(sorted.length * 0.999))] / 1e6;
         append(String.format(Locale.US,
                 "%s %s %s avg=%.1ffps game=%.1ffps median=%.1fms 1%%low=%.1ffps 0.1%%low=%.1ffps worst=%.0fms spikes50ms=%d mem=%s",
-                timestamp(), label, tag, window.length * 1e9 / total, presents * 1000.0 / windowMs, p50, 1000 / p99, 1000 / p999,
+                timestamp(), label, tags(), window.length * 1e9 / total, presents * 1000.0 / windowMs, p50, 1000 / p99, 1000 / p999,
                 worst / 1e6, spikes, memAvailable()));
     }
 
