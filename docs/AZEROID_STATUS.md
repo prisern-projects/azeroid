@@ -69,6 +69,10 @@ performance, and specifically **smoother than WeHavePhones**. Tuning targets thi
   native textures, pinning on. Steady 80–88 FPS, 1% lows 44–57, almost no frames over 50 ms.
 - Launch: the first Play click almost always misses (the page hasn't rendered yet), and a click that lands
   spawns WoW in about 2.5 s. 0.2.11 retries every 5 s instead of every 10 s.
+- 0.2.12 (gplasync DXVK), very crowded Stormwind, 576p preset 3: 68–92 FPS, 1% lows 41–55, about 1 frame
+  over 50 ms per 30 s, but single 100–765 ms stalls remain. Owner: "felt better". With async shaders the rest
+  is probably asset streaming (new players' models and textures), not shaders.
+- 0.2.11 Play retry: WoW spawned 36 s after Play, down from 41–95 s.
 - **Don't request a display mode or frame rate** (`preferredDisplayModeId`, `Surface.setFrameRate`) on the
   S26 Ultra. In 0.2.4 it switched the panel resolution and the X-server output ended up small in the corner at
   60 FPS. Reverted in 0.2.5. 120 Hz comes from Samsung's Motion smoothness = Adaptive.
