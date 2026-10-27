@@ -2,6 +2,14 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.3.18] - 2026-10-27
+
+- **Bring your PC's add-on settings over.** Add-ons → Settings has a new *Settings from your PC (WTF folder)*
+  box. Copy the PC's `_classic_era_\WTF` folder to `Download/WeHavePhones/WTF` on the phone and tap
+  *Import*: add-on settings (RestedXP etc.), keybinds and macros are merged into the game. The phone keeps its
+  own `Config.wtf`, so graphics and resolution don't change, and the old folder is backed up to
+  `Download/WeHavePhones/WTF-backup` first. *Export* copies the phone's WTF to `Download/WeHavePhones/WTF-export`.
+
 ## [0.3.17] - 2026-10-26
 
 - **Right stick responds from a small push again.** 0.3.16's squared curve stayed under WoW's own dead zone

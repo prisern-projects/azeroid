@@ -2,6 +2,7 @@ package com.wehavephones.mobile.addons;
 
 import android.content.Context;
 import android.net.Uri;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 
@@ -287,6 +288,47 @@ public final class AddonManager {
             public String run() throws Exception {
                 registry.setKey(providerType, value);
                 return "saved";
+            }
+        }, callback);
+    }
+
+    /** Download/WeHavePhones: the folder the phone and a PC can both reach. */
+    public static File transferDir() {
+        return new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "WeHavePhones");
+    }
+
+    private File wtfDir() throws IOException {
+        File addons = addonsDir();
+        if (addons == null) throw new IOException("No World of Warcraft installation detected");
+        File game = addons.getParentFile().getParentFile();
+        File existing = FileOps.findCaseInsensitive(game, "WTF");
+        return existing != null ? existing : new File(game, "WTF");
+    }
+
+    /** Merges Download/WeHavePhones/WTF (or Download/WTF) into the game, keeping the phone's Config.wtf. */
+    public void importWtf(final Callback<Integer> callback) {
+        runAsync(new Job<Integer>() {
+            @Override
+            public Integer run() throws Exception {
+                requireGameClosed();
+                File source = new File(transferDir(), "WTF");
+                if (!source.isDirectory()) {
+                    File download = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "WTF");
+                    if (download.isDirectory()) source = download;
+                }
+                return WtfTransfer.importInto(source, wtfDir(), new File(transferDir(), "WTF-backup"));
+            }
+        }, callback);
+    }
+
+    /** Copies the game's WTF folder to Download/WeHavePhones/WTF-export. */
+    public void exportWtf(final Callback<String> callback) {
+        runAsync(new Job<String>() {
+            @Override
+            public String run() throws Exception {
+                requireGameClosed();
+                WtfTransfer.exportTo(wtfDir(), new File(transferDir(), "WTF-export"));
+                return "exported";
             }
         }, callback);
     }

@@ -85,6 +85,35 @@
                         android:drawableStart="@drawable/wehavephones_ic_copy"
                         android:text="@string/wehavephones_addons_copy_path" />
                 </LinearLayout>
+                <LinearLayout
+                    style="@style/WeHavePhonesAddonsBox"
+                    android:layout_marginTop="8dp">
+                    <TextView
+                        style="@style/WeHavePhonesAddonsGroup"
+                        android:text="@string/azeroid_wtf_title" />
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="@string/azeroid_wtf_info"
+                        android:textColor="@color/wehavephones_text_dim"
+                        android:textSize="12sp" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:orientation="horizontal">
+                        <Button
+                            android:id="@+id/BTWtfImport"
+                            style="@style/WeHavePhonesButtonCompact"
+                            android:text="@string/azeroid_wtf_import" />
+                        <Button
+                            android:id="@+id/BTWtfExport"
+                            style="@style/WeHavePhonesButtonCompact"
+                            android:layout_marginStart="8dp"
+                            android:text="@string/azeroid_wtf_export" />
+                    </LinearLayout>
+                </LinearLayout>
             </LinearLayout>
             <LinearLayout
                 android:layout_width="0dp"

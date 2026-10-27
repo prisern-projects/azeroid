@@ -74,6 +74,8 @@ public class AddonSettingsFragment extends Fragment {
         showKeyRows();
         showConsolePortStatus(view);
         view.findViewById(R.id.BTConsolePortCheck).setOnClickListener((v) -> checkConsolePort());
+        view.findViewById(R.id.BTWtfImport).setOnClickListener((v) -> confirmWtfImport());
+        view.findViewById(R.id.BTWtfExport).setOnClickListener((v) -> exportWtf());
     }
 
     private void saveSettings() {
@@ -224,6 +226,53 @@ public class AddonSettingsFragment extends Fragment {
                 activity.setBusy(false, null);
                 activity.showStatus(report.summary());
                 showConsolePortStatus(requireView());
+            }
+
+            @Override
+            public void onError(String message) {
+                if (!isAdded()) return;
+                activity.setBusy(false, null);
+                activity.showError(message);
+            }
+        });
+    }
+
+    private void confirmWtfImport() {
+        new AlertDialog.Builder(requireContext())
+                .setTitle(R.string.azeroid_wtf_import)
+                .setMessage(R.string.azeroid_wtf_import_confirm)
+                .setNegativeButton(R.string.wehavephones_addons_cancel, null)
+                .setPositiveButton(R.string.azeroid_wtf_import, (dialog, which) -> importWtf())
+                .show();
+    }
+
+    private void importWtf() {
+        activity.setBusy(true, getString(R.string.azeroid_wtf_working));
+        manager.importWtf(new AddonManager.Callback<Integer>() {
+            @Override
+            public void onSuccess(Integer files) {
+                if (!isAdded()) return;
+                activity.setBusy(false, null);
+                activity.showStatus(getString(R.string.azeroid_wtf_imported, files));
+            }
+
+            @Override
+            public void onError(String message) {
+                if (!isAdded()) return;
+                activity.setBusy(false, null);
+                activity.showError(message);
+            }
+        });
+    }
+
+    private void exportWtf() {
+        activity.setBusy(true, getString(R.string.azeroid_wtf_working));
+        manager.exportWtf(new AddonManager.Callback<String>() {
+            @Override
+            public void onSuccess(String result) {
+                if (!isAdded()) return;
+                activity.setBusy(false, null);
+                activity.showStatus(getString(R.string.azeroid_wtf_exported));
             }
 
             @Override

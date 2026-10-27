@@ -430,4 +430,12 @@ World of Warcraft, Warcraft, Battle.net and Blizzard Entertainment are trademark
     <string name="wehavephones_update_busy">Close the game or Battle.net session and wait for any file import to finish, then tap Check for update again.</string>
     <string name="wehavephones_update_error">Could not update the app: %1$s\n\nYour installed app and game data have been kept. Tap Check for update to retry.</string>
     <string name="wehavephones_disclaimer">Unofficial. Not affiliated with Blizzard Entertainment, Inc.</string>
+    <string name="azeroid_wtf_title">Settings from your PC (WTF folder)</string>
+    <string name="azeroid_wtf_info">Copy the WTF folder from your PC\'s _classic_era_ folder into Download/WeHavePhones on the phone, then tap Import. Add-on settings, keybinds and macros come over; the phone keeps its own graphics settings (Config.wtf). The current folder is backed up to Download/WeHavePhones/WTF-backup first.</string>
+    <string name="azeroid_wtf_import">Import</string>
+    <string name="azeroid_wtf_export">Export</string>
+    <string name="azeroid_wtf_import_confirm">Copy Download/WeHavePhones/WTF into the game? Files with the same name are replaced. The current WTF folder is backed up to Download/WeHavePhones/WTF-backup.</string>
+    <string name="azeroid_wtf_working">Copying the WTF folder...</string>
+    <string name="azeroid_wtf_imported">Imported %1$d files. Start the game to use them.</string>
+    <string name="azeroid_wtf_exported">Exported to Download/WeHavePhones/WTF-export</string>
 </resources>
