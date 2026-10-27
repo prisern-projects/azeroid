@@ -2,6 +2,13 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.3.20] - 2026-10-27
+
+- **Compact controller in the lower half.** Everything sits within thumb reach at the bottom: LT/LB and RB/RT
+  in a row just above each stick and ABXY, D-pad next to the left stick, camera stick next to ABXY, L3/R3
+  beside them, View/Menu small at the bottom. The upper half of the screen is free. Sticks and buttons are a
+  little smaller.
+
 ## [0.3.19] - 2026-10-27
 
 - **On-screen controller redone.** Xbox-style layout over the game: left stick high with the D-pad below and
