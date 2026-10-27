@@ -2,6 +2,11 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.3.22] - 2026-10-27
+
+- **View and Menu moved to the bottom corners of the XP bar**, one on each side, so they no longer cover the
+  action bar.
+
 ## [0.3.21] - 2026-10-27
 
 On-screen controller, with ideas from [DroidDeck](https://github.com/Droid-Deck/DroidDeck)'s touch controls
