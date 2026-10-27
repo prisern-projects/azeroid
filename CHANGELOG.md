@@ -2,6 +2,19 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.3.19] - 2026-10-27
+
+- **On-screen controller redone.** Xbox-style layout over the game: left stick high with the D-pad below and
+  to its right, ABXY on the right with the camera stick below and to its left, shoulders in the top corners,
+  View/Menu top centre, L3/R3 next to the sticks. Face buttons and sticks are bigger.
+- **Sticks centre under your thumb.** Touching anywhere near a stick (the faint ring) starts it where the
+  thumb lands, so it never jumps on touch-down. Buttons always win over a stick's catch area.
+- **Fixed sticks freezing with two fingers.** Moves were matched to fingers by position in the touch list
+  instead of finger id, so lifting one finger could leave the other stick stuck or dead.
+- **New stick curves**, on the distance pushed (round dead zone, diagonals as fast as straight): movement is
+  full at 45% travel; the camera starts at 30% speed with a light push and reaches full at 85%.
+- One state update to the game per stick move instead of four.
+
 ## [0.3.18] - 2026-10-27
 
 - **Bring your PC's add-on settings over.** Add-ons → Settings has a new *Settings from your PC (WTF folder)*

@@ -368,20 +368,32 @@ public class InputControlsView extends View {
                             touchpadView.setPointerButtonLeftEnabled(false);
                         }
                     }
+                    if (!handled) {
+                        for (ControlElement element : profile.getElements()) {
+                            if (element.handleNearbyTouchDown(pointerId, x, y)) {
+                                handled = true;
+                                break;
+                            }
+                        }
+                    }
                     if (!handled) touchpadView.onTouchEvent(event);
                     break;
                 }
                 case MotionEvent.ACTION_MOVE: {
-                    for (byte i = 0, count = (byte)event.getPointerCount(); i < count; i++) {
+                    // Elements track pointer ids; indexes shift when an earlier finger lifts.
+                    boolean unhandled = false;
+                    for (int i = 0, count = event.getPointerCount(); i < count; i++) {
                         float x = event.getX(i);
                         float y = event.getY(i);
+                        int id = event.getPointerId(i);
 
                         handled = false;
                         for (ControlElement element : profile.getElements()) {
-                            if (element.handleTouchMove(i, x, y)) handled = true;
+                            if (element.handleTouchMove(id, x, y)) handled = true;
                         }
-                        if (!handled) touchpadView.onTouchEvent(event);
+                        if (!handled) unhandled = true;
                     }
+                    if (unhandled) touchpadView.onTouchEvent(event);
                     break;
                 }
                 case MotionEvent.ACTION_UP:
@@ -420,6 +432,23 @@ public class InputControlsView extends View {
         handleInputEvent(binding, isActionDown, 0);
     }
 
+    private boolean gamepadBatch;
+    private boolean gamepadBatchDirty;
+
+    /** Collects a stick's four axis updates into one state send to the game. */
+    public void beginGamepadBatch() {
+        gamepadBatch = true;
+        gamepadBatchDirty = false;
+    }
+
+    public void endGamepadBatch() {
+        gamepadBatch = false;
+        if (!gamepadBatchDirty) return;
+        gamepadBatchDirty = false;
+        WinHandler winHandler = xServer != null ? xServer.getWinHandler() : null;
+        if (winHandler != null && profile != null) winHandler.onVirtualGamepadInput(profile.getGamepadState());
+    }
+
     public void handleInputEvent(Binding binding, boolean isActionDown, float offset) {
         if (binding.isGamepad()) {
             WinHandler winHandler = xServer != null ? xServer.getWinHandler() : null;
@@ -446,7 +475,8 @@ public class InputControlsView extends View {
                 state.dpad[binding.ordinal() - Binding.GAMEPAD_DPAD_UP.ordinal()] = isActionDown;
             }
 
-            if (winHandler != null) winHandler.onVirtualGamepadInput(state);
+            if (gamepadBatch) gamepadBatchDirty = true;
+            else if (winHandler != null) winHandler.onVirtualGamepadInput(state);
         }
         else {
             if (binding == Binding.MOUSE_MOVE_LEFT || binding == Binding.MOUSE_MOVE_RIGHT) {

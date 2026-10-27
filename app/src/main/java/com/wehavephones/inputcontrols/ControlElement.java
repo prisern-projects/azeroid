@@ -82,6 +82,10 @@ public class ControlElement {
     private Range range;
     private byte orientation;
     private PointF currentPosition;
+    // A stick's centre while held: where the thumb landed, so the stick never jumps on touch-down.
+    private PointF floatingCenter;
+    /** How far from its resting place a stick still picks up a touch, in stick radii. */
+    public static final float STICK_CATCH_RADIUS = 2.0f;
     private RangeScroller scroller;
     private CubicBezierInterpolator interpolator;
     private Object touchTime;
@@ -595,9 +599,41 @@ public class ControlElement {
         return !toggleSwitch && (binding == Binding.GAMEPAD_BUTTON_L3 || binding == Binding.GAMEPAD_BUTTON_R3);
     }
 
+    /**
+     * Stick distance (0..1) to gamepad strength. Both skip a small round dead zone for thumb
+     * jitter. Movement is full at 45% travel, like the old 3x curve but less twitchy. The camera
+     * starts at 30%, just past WoW's own dead zone, so a light push already turns, then rises
+     * gently to full at 85% travel for fine aim.
+     */
+    static float stickResponse(boolean camera, float magnitude) {
+        final float deadZone = 0.08f;
+        if (magnitude <= deadZone) return 0;
+        if (!camera) return Math.min(1, (magnitude - deadZone) / (0.45f - deadZone));
+        float travel = Math.min(1, (magnitude - deadZone) / (0.85f - deadZone));
+        return 0.3f + 0.7f * (float)Math.pow(travel, 1.4);
+    }
+
+    /**
+     * Second chance for a touch no element contains: a stick takes it when it lands near the
+     * stick, and centres itself under the thumb. Buttons always win, they are asked first.
+     */
+    public boolean handleNearbyTouchDown(int pointerId, float x, float y) {
+        if (type != Type.STICK || currentPointerId != -1) return false;
+        Rect box = getBoundingBox();
+        float radius = box.width() * 0.5f;
+        float catchRadius = radius * STICK_CATCH_RADIUS;
+        if (Mathf.lengthSq(x - box.centerX(), y - box.centerY()) > catchRadius * catchRadius) return false;
+        currentPointerId = pointerId;
+        floatingCenter = new PointF(
+                Mathf.clamp(x, radius, inputControlsView.getWidth() - radius),
+                Mathf.clamp(y, radius, inputControlsView.getHeight() - radius));
+        return handleTouchMove(pointerId, x, y);
+    }
+
     public boolean handleTouchDown(int pointerId, float x, float y) {
         if (currentPointerId == -1 && containsPoint(x, y)) {
             currentPointerId = pointerId;
+            if (type == Type.STICK) floatingCenter = new PointF(x, y);
             if (type == Type.BUTTON) {
                 if (isKeepButtonPressedAfterMinTime()) touchTime = System.currentTimeMillis();
                 if (!toggleSwitch || !selected) inputControlsView.handleInputEvent(getBindingAt(0), true);
@@ -633,12 +669,12 @@ public class ControlElement {
                 currentPosition.set(x, y);
             }
             else {
-                float localX = x - boundingBox.left;
-                float localY = y - boundingBox.top;
-                float offsetX = localX - radius;
-                float offsetY = localY - radius;
+                float centerX = floatingCenter != null ? floatingCenter.x : boundingBox.centerX();
+                float centerY = floatingCenter != null ? floatingCenter.y : boundingBox.centerY();
+                float offsetX = x - centerX;
+                float offsetY = y - centerY;
 
-                float distance = Mathf.lengthSq(radius - localX, radius - localY);
+                float distance = Mathf.lengthSq(offsetX, offsetY);
                 if (distance > radius * radius) {
                     float angle = (float)Math.atan2(offsetY, offsetX);
                     offsetX = (float)(Math.cos(angle) * radius);
@@ -651,22 +687,25 @@ public class ControlElement {
 
             if (type == Type.STICK) {
                 if (currentPosition == null) currentPosition = new PointF();
-                currentPosition.x = boundingBox.left + deltaX * radius + radius;
-                currentPosition.y = boundingBox.top + deltaY * radius + radius;
+                float centerX = floatingCenter != null ? floatingCenter.x : boundingBox.centerX();
+                float centerY = floatingCenter != null ? floatingCenter.y : boundingBox.centerY();
+                currentPosition.x = centerX + deltaX * radius;
+                currentPosition.y = centerY + deltaY * radius;
                 final boolean[] states = {deltaY <= -STICK_DEAD_ZONE, deltaX >= STICK_DEAD_ZONE, deltaY >= STICK_DEAD_ZONE, deltaX <= -STICK_DEAD_ZONE};
 
+                // Gamepad output is shaped on the stick's distance, not per axis, so diagonals
+                // move as fast as straight pushes and the dead zone is round.
+                float magnitude = Math.min(1, (float)Math.hypot(deltaX, deltaY));
+                float output = stickResponse(getBindingAt(0).isRightThumb(), magnitude);
+                float gamepadX = magnitude > 0 ? deltaX / magnitude * output : 0;
+                float gamepadY = magnitude > 0 ? deltaY / magnitude * output : 0;
+
+                inputControlsView.beginGamepadBatch();
                 for (byte i = 0; i < 4; i++) {
                     float value = i == 1 || i == 3 ? deltaX : deltaY;
                     Binding binding = getBindingAt(i);
                     if (binding.isGamepad()) {
-                        if (binding.isRightThumb()) {
-                            // Camera stick: starts just past WoW's own dead zone, full speed at two thirds of travel
-                            // (the left stick's 3x reaches full at a third, too twitchy for the camera).
-                            float travel = Math.max(0, (Math.abs(value) - STICK_DEAD_ZONE) / (1 - STICK_DEAD_ZONE));
-                            value = travel > 0 ? Math.min(1, 0.25f + travel * 1.1f) * Mathf.sign(value) : 0;
-                        }
-                        else value = Mathf.clamp(Math.max(0, Math.abs(value) - 0.01f) * Mathf.sign(value) * STICK_SENSITIVITY, -1, 1);
-                        inputControlsView.handleInputEvent(binding, true, value);
+                        inputControlsView.handleInputEvent(binding, true, i == 1 || i == 3 ? gamepadX : gamepadY);
                         this.states[i] = true;
                     }
                     else {
@@ -675,6 +714,7 @@ public class ControlElement {
                         this.states[i] = state;
                     }
                 }
+                inputControlsView.endGamepadBatch();
 
                 inputControlsView.invalidate();
             }
@@ -763,6 +803,7 @@ public class ControlElement {
                 }
 
                 if (currentPosition != null) currentPosition = null;
+                floatingCenter = null;
             }
             currentPointerId = -1;
             return true;
@@ -867,6 +908,10 @@ public class ControlElement {
             }
             case STICK:
             case TRACKPAD: {
+                if (floatingCenter != null) {
+                    cx = floatingCenter.x;
+                    cy = floatingCenter.y;
+                }
                 float radius = Math.min(box.width(), box.height()) * 0.5f;
                 paint.setStyle(Paint.Style.FILL);
                 paint.setColor(azAlpha(AZ_INK, 0.35f));
