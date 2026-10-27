@@ -361,11 +361,25 @@ public class InputControlsView extends View {
                     float x = event.getX(actionIndex);
                     float y = event.getY(actionIndex);
 
+                    // Deliver this gesture's moves as they arrive, not batched to the next frame.
+                    requestUnbufferedDispatch(event);
                     touchpadView.setPointerButtonLeftEnabled(true);
                     for (ControlElement element : profile.getElements()) {
-                        if (element.handleTouchDown(pointerId, x, y)) handled = true;
                         if (element.getBindingAt(0) == Binding.MOUSE_LEFT_BUTTON) {
                             touchpadView.setPointerButtonLeftEnabled(false);
+                        }
+                    }
+                    // One element per touch: the closest button whose padded area it is in
+                    // (buttons win), else a stick or D-pad it hits, else a stick it lands near.
+                    ControlElement nearest = nearestFreeButton(x, y, null);
+                    if (nearest != null) handled = nearest.pressButton(pointerId, x, y);
+                    if (!handled) {
+                        for (ControlElement element : profile.getElements()) {
+                            if (element.getType() == ControlElement.Type.BUTTON) continue;
+                            if (element.handleTouchDown(pointerId, x, y)) {
+                                handled = true;
+                                break;
+                            }
                         }
                     }
                     if (!handled) {
@@ -391,6 +405,7 @@ public class InputControlsView extends View {
                         for (ControlElement element : profile.getElements()) {
                             if (element.handleTouchMove(id, x, y)) handled = true;
                         }
+                        if (!handled) handled = slideButton(id, x, y);
                         if (!handled) unhandled = true;
                     }
                     if (unhandled) touchpadView.onTouchEvent(event);
@@ -430,6 +445,44 @@ public class InputControlsView extends View {
 
     public void handleInputEvent(Binding binding, boolean isActionDown) {
         handleInputEvent(binding, isActionDown, 0);
+    }
+
+    private ControlElement nearestFreeButton(float x, float y, ControlElement except) {
+        ControlElement nearest = null;
+        float best = Float.MAX_VALUE;
+        for (ControlElement element : profile.getElements()) {
+            if (element == except || !element.isFree()) continue;
+            float distance = element.hitDistance(x, y);
+            if (distance >= 0 && distance < best) {
+                best = distance;
+                nearest = element;
+            }
+        }
+        return nearest;
+    }
+
+    /**
+     * A finger holding a button that slides onto another button hands the press over without
+     * lifting. Leaving into empty space keeps the button held (a held modifier stays held).
+     */
+    private boolean slideButton(int pointerId, float x, float y) {
+        ControlElement held = null;
+        for (ControlElement element : profile.getElements()) {
+            if (element.isButtonHeldBy(pointerId)) {
+                held = element;
+                break;
+            }
+        }
+        if (held == null) return false;
+        if (held.hitDistance(x, y) < 0) {
+            ControlElement next = nearestFreeButton(x, y, held);
+            if (next != null) {
+                held.handleTouchUp(pointerId);
+                next.pressButton(pointerId, x, y);
+                invalidate();
+            }
+        }
+        return true;
     }
 
     private boolean gamepadBatch;

@@ -7,6 +7,7 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PointF;
 import android.graphics.Rect;
+import android.os.SystemClock;
 
 import androidx.core.graphics.ColorUtils;
 
@@ -85,7 +86,13 @@ public class ControlElement {
     // A stick's centre while held: where the thumb landed, so the stick never jumps on touch-down.
     private PointF floatingCenter;
     /** How far from its resting place a stick still picks up a touch, in stick radii. */
-    public static final float STICK_CATCH_RADIUS = 2.0f;
+    public static final float STICK_CATCH_RADIUS = 1.7f;
+    /** Buttons react this far outside their drawn edge, as a share of their half size. */
+    public static final float BUTTON_HIT_PADDING = 0.25f;
+    /** A second touch on a stick within this time clicks it (L3/R3) while held. */
+    public static final long STICK_DOUBLE_TAP_MS = 300;
+    private long stickLastUp;
+    private boolean stickClicked;
     private RangeScroller scroller;
     private CubicBezierInterpolator interpolator;
     private Object touchTime;
@@ -600,17 +607,42 @@ public class ControlElement {
     }
 
     /**
-     * Stick distance (0..1) to gamepad strength. Both skip a small round dead zone for thumb
-     * jitter. Movement is full at 45% travel, like the old 3x curve but less twitchy. The camera
-     * starts at 30%, just past WoW's own dead zone, so a light push already turns, then rises
-     * gently to full at 85% travel for fine aim.
+     * For a button: how close (x, y) is to it, 0 at the centre to 1 at the padded edge, or -1
+     * outside. Lets near misses count and picks the closest button when padded areas overlap.
      */
-    static float stickResponse(boolean camera, float magnitude) {
-        final float deadZone = 0.08f;
-        if (magnitude <= deadZone) return 0;
-        if (!camera) return Math.min(1, (magnitude - deadZone) / (0.45f - deadZone));
-        float travel = Math.min(1, (magnitude - deadZone) / (0.85f - deadZone));
-        return 0.3f + 0.7f * (float)Math.pow(travel, 1.4);
+    public float hitDistance(float x, float y) {
+        if (type != Type.BUTTON) return -1;
+        Rect box = getBoundingBox();
+        float halfW = box.width() * 0.5f, halfH = box.height() * 0.5f;
+        float padding = Math.min(halfW, halfH) * BUTTON_HIT_PADDING;
+        float dx = Math.abs(x - box.centerX()) / (halfW + padding);
+        float dy = Math.abs(y - box.centerY()) / (halfH + padding);
+        float distance = shape == Shape.CIRCLE ? (float)Math.hypot(dx, dy) : Math.max(dx, dy);
+        return distance <= 1 ? distance : -1;
+    }
+
+    public boolean isButtonHeldBy(int pointerId) {
+        return type == Type.BUTTON && currentPointerId == pointerId;
+    }
+
+    public boolean isFree() {
+        return currentPointerId == -1;
+    }
+
+    private Binding stickClickBinding() {
+        Binding first = getBindingAt(0);
+        if (!first.isGamepad()) return null;
+        return first.isRightThumb() ? Binding.GAMEPAD_BUTTON_R3 : Binding.GAMEPAD_BUTTON_L3;
+    }
+
+    /** A stick touch: centres under the thumb, and a quick second tap holds L3/R3. */
+    private boolean startStick(int pointerId, float x, float y, PointF center) {
+        currentPointerId = pointerId;
+        floatingCenter = center;
+        Binding click = stickClickBinding();
+        stickClicked = click != null && stickLastUp > 0 && SystemClock.uptimeMillis() - stickLastUp < STICK_DOUBLE_TAP_MS;
+        if (stickClicked) inputControlsView.handleInputEvent(click, true);
+        return handleTouchMove(pointerId, x, y);
     }
 
     /**
@@ -623,35 +655,40 @@ public class ControlElement {
         float radius = box.width() * 0.5f;
         float catchRadius = radius * STICK_CATCH_RADIUS;
         if (Mathf.lengthSq(x - box.centerX(), y - box.centerY()) > catchRadius * catchRadius) return false;
-        currentPointerId = pointerId;
-        floatingCenter = new PointF(
+        return startStick(pointerId, x, y, new PointF(
                 Mathf.clamp(x, radius, inputControlsView.getWidth() - radius),
-                Mathf.clamp(y, radius, inputControlsView.getHeight() - radius));
-        return handleTouchMove(pointerId, x, y);
+                Mathf.clamp(y, radius, inputControlsView.getHeight() - radius)));
     }
 
     public boolean handleTouchDown(int pointerId, float x, float y) {
-        if (currentPointerId == -1 && containsPoint(x, y)) {
-            currentPointerId = pointerId;
-            if (type == Type.STICK) floatingCenter = new PointF(x, y);
-            if (type == Type.BUTTON) {
-                if (isKeepButtonPressedAfterMinTime()) touchTime = System.currentTimeMillis();
-                if (!toggleSwitch || !selected) inputControlsView.handleInputEvent(getBindingAt(0), true);
-                return true;
-            }
-            else if (type == Type.RANGE_BUTTON) {
-                scroller.handleTouchDown(x, y);
-                return true;
-            }
-            else {
-                if (type == Type.TRACKPAD) {
-                    if (currentPosition == null) currentPosition = new PointF();
-                    currentPosition.set(x, y);
-                }
-                return handleTouchMove(pointerId, x, y);
-            }
-        }
+        if (currentPointerId == -1 && containsPoint(x, y)) return press(pointerId, x, y);
         else return false;
+    }
+
+    /** Presses a free button without the containment test (padded hits, sliding between buttons). */
+    public boolean pressButton(int pointerId, float x, float y) {
+        return type == Type.BUTTON && currentPointerId == -1 && press(pointerId, x, y);
+    }
+
+    private boolean press(int pointerId, float x, float y) {
+        if (type == Type.STICK) return startStick(pointerId, x, y, new PointF(x, y));
+        currentPointerId = pointerId;
+        if (type == Type.BUTTON) {
+            if (isKeepButtonPressedAfterMinTime()) touchTime = System.currentTimeMillis();
+            if (!toggleSwitch || !selected) inputControlsView.handleInputEvent(getBindingAt(0), true);
+            return true;
+        }
+        else if (type == Type.RANGE_BUTTON) {
+            scroller.handleTouchDown(x, y);
+            return true;
+        }
+        else {
+            if (type == Type.TRACKPAD) {
+                if (currentPosition == null) currentPosition = new PointF();
+                currentPosition.set(x, y);
+            }
+            return handleTouchMove(pointerId, x, y);
+        }
     }
 
     public boolean handleTouchMove(int pointerId, float x, float y) {
@@ -693,12 +730,10 @@ public class ControlElement {
                 currentPosition.y = centerY + deltaY * radius;
                 final boolean[] states = {deltaY <= -STICK_DEAD_ZONE, deltaX >= STICK_DEAD_ZONE, deltaY >= STICK_DEAD_ZONE, deltaX <= -STICK_DEAD_ZONE};
 
-                // Gamepad output is shaped on the stick's distance, not per axis, so diagonals
-                // move as fast as straight pushes and the dead zone is round.
-                float magnitude = Math.min(1, (float)Math.hypot(deltaX, deltaY));
-                float output = stickResponse(getBindingAt(0).isRightThumb(), magnitude);
-                float gamepadX = magnitude > 0 ? deltaX / magnitude * output : 0;
-                float gamepadY = magnitude > 0 ? deltaY / magnitude * output : 0;
+                // Gamepad output is the thumb's offset as is (linear, no extra dead zone or curve):
+                // WoW applies its own dead zone and camera speed.
+                float gamepadX = deltaX;
+                float gamepadY = deltaY;
 
                 inputControlsView.beginGamepadBatch();
                 for (byte i = 0; i < 4; i++) {
@@ -799,6 +834,11 @@ public class ControlElement {
                     scroller.handleTouchUp();
                 }
                 else if (type == Type.STICK) {
+                    Binding click = stickClickBinding();
+                    if (stickClicked && click != null) inputControlsView.handleInputEvent(click, false);
+                    // A click ends the double tap; otherwise this release can start one.
+                    stickLastUp = stickClicked ? 0 : SystemClock.uptimeMillis();
+                    stickClicked = false;
                     inputControlsView.invalidate();
                 }
 

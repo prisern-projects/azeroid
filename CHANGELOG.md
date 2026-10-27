@@ -2,6 +2,25 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.3.21] - 2026-10-27
+
+On-screen controller, with ideas from [DroidDeck](https://github.com/Droid-Deck/DroidDeck)'s touch controls
+(behaviour reimplemented here, no code copied; DroidDeck is GPL-3.0).
+
+- **Instant touch input.** The controller asks Android for unbuffered touch events, so stick and button moves
+  reach the game as they happen instead of being batched to the next screen frame.
+- **Slide between buttons.** A thumb that slides from one button onto another releases the first and presses
+  the second without lifting. Sliding off into empty space keeps the button held, so held modifiers stay held.
+  Moving a finger on a button no longer moves the mouse cursor as well.
+- **Bigger touch areas.** Buttons react 25% beyond their drawn edge; when areas overlap the closest button
+  wins, and buttons win over sticks.
+- **Double-tap a stick for L3/R3.** A second touch within 0.3 s holds L3 (left) or R3 (right) while held.
+  The separate L3/R3 buttons are gone.
+- **Physical sizes.** Layout and sizes follow DroidDeck's millimetre layout for this screen: 9.5 mm face
+  buttons, sticks and ABXY 27 mm in from the edges, D-pad and camera stick below and inward, LT/LB and RB/RT
+  just above (bumpers inside), View/Menu small at the bottom.
+- **Linear sticks.** The stick sends the thumb's offset as is; WoW applies its own dead zone and camera speed.
+
 ## [0.3.20] - 2026-10-27
 
 - **Compact controller in the lower half.** Everything sits within thumb reach at the bottom: LT/LB and RB/RT
