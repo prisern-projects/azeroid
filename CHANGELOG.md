@@ -2,6 +2,15 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.3.23] - 2026-10-28
+
+- **Ready for WoW Forever (launches 2026-11-04).** Forever support already came with the WeHavePhones engine
+  (game picker, launch, native controller UI instead of ConsolePort, D3D11 on the Adreno 840), and Azeroid's
+  own changes (core pinning, native textures, async shaders, frame log) work for any WoW game.
+- **Battle.net retries failed updates** (from upstream WeHavePhones `ec567f6`): when Agent fails an update,
+  the launcher reads the error from the Battle.net log and clicks Update again, up to two times, then tells
+  you to press Update or use Scan and Repair. Useful for launch-day patches.
+
 ## [0.3.22] - 2026-10-27
 
 - **View and Menu moved to the bottom corners of the XP bar**, one on each side, so they no longer cover the

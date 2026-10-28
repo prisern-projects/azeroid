@@ -1,1 +1,2 @@
 UPSTREAM=https://github.com/ashmerra/wehavephones@5ee4eb17272d979bdbe698b29f944af4d366cf0a
+CHERRY_PICKED=ec567f6 (Retry Battle.net updates that Agent fails at once)
