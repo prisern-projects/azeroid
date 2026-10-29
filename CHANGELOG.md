@@ -2,6 +2,13 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.3.24] - 2026-10-29
+
+- **No more launch screen over Battle.net and the game.** Play still starts Battle.net, presses Play and waits
+  for the game by itself, but you now see it happen. The launch screen hid Battle.net's sign-in, account picker
+  and pop-ups, so a launch that needed you looked stuck until you tapped *Show screen*, and it kept covering
+  the game until it guessed WoW was ready. Progress now shows as short messages at the bottom.
+
 ## [0.3.23] - 2026-10-28
 
 - **Ready for WoW Forever (launches 2026-11-04).** Forever support already came with the WeHavePhones engine

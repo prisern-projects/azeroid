@@ -138,13 +138,16 @@ public final class WeHavePhonesPlayController {
     }
 
     /**
-     * Single-runtime one-button flow under the launch overlay; after it steps
-     * aside, stage changes are mirrored as toasts over the game.
+     * Single-runtime one-button flow, with stage changes as toasts over the
+     * session. Azeroid does not cover the session with the launch overlay: it
+     * hid Battle.net's sign-in, account picker and pop-ups, so a launch that
+     * needed the player looked stuck, and it kept covering the game until it
+     * guessed the first frame. Without {@link LaunchOverlayController#begin}
+     * the overlay never attaches and the session shows its own start dialog.
      */
     private static void startOneButton(final WeHavePhonesActivity activity) {
         final android.content.Context appContext = activity.getApplicationContext();
         final OneButtonLauncher.Stage[] shown = {null};
-        LaunchOverlayController.begin(activity);
         OneButtonLauncher.start(activity, new OneButtonLauncher.Listener() {
             @Override
             public void onStage(OneButtonLauncher.Stage stage, String message, boolean error) {
