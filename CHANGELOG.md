@@ -2,6 +2,20 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.3.25] - 2026-11-10
+
+Forever launch-week fixes from upstream WeHavePhones (cherry-picked):
+
+- **A dead WoW no longer blocks the next launch** (`3ec322a`). Closing the app while WoW ran could leave a
+  zombie WoW process that still looked like the game, so the next Play waited for it.
+- **Less heat before the game starts** (`2f3e058`). The session draws at 30 FPS while Battle.net and the launch
+  run; the cap lifts for good the moment WoW starts, so the game itself is never capped.
+- **Battle.net starts about 6 s faster** (`8142f0b`). Wine's audio codec drivers, which Battle.net probed about
+  130 times at every start, are turned off. Games still have sound.
+- **Fixed a GPU buffer being freed while still in use** (`d3adef2`) when Android asked the app to free memory.
+- **Player model preloading off** in every game (`c3b597c`), which saves memory.
+- **"Forever Stress Test" is now called "Forever"** (`fc68593`).
+
 ## [0.3.24] - 2026-10-29
 
 - **No more launch screen over Battle.net and the game.** Play still starts Battle.net, presses Play and waits

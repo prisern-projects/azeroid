@@ -62,6 +62,7 @@ import com.wehavephones.core.WineRegistryEditor;
 import com.wehavephones.core.WineStartMenuCreator;
 import com.wehavephones.core.WineThemeManager;
 import com.wehavephones.core.WineUtils;
+import com.wehavephones.core.WineAcmCodecs;
 import com.wehavephones.core.WineFontPaths;
 import com.wehavephones.core.WineRequestHandler;
 import com.wehavephones.inputcontrols.ControlsProfile;
@@ -135,6 +136,8 @@ import java.util.concurrent.Executors;
         return memoryTrimListener;
     }
     private static final int ROOTFS_UTILS_PATCH_VERSION = 4;
+    /** Frame interval of the 30 FPS cap held until WoW starts (see setBootFrameCap). */
+    private static final long BOOT_FRAME_INTERVAL_MS = 1000 / 30;
     private static final String WINHANDLER_LITE_ASSET = "winhandler/winhandler-lite.exe";
     private static final String WINHANDLER_LITE_GUEST_PATH = "C:\\windows\\winhandler-lite.exe";
     private static final String OPEN_URL_ASSET = "winhandler/openurl.exe";
@@ -147,6 +150,7 @@ import java.util.concurrent.Executors;
     // so existing containers re-apply patches without requiring appVersion/imgVersion changes.
     private static final int GENERAL_PATCH_VERSION = 6;
     private XServerView xServerView;
+    private volatile boolean bootFrameCap;
     private InputControlsView inputControlsView;
     private TouchpadView touchpadView;
     private XEnvironment environment;
@@ -361,6 +365,7 @@ import java.util.concurrent.Executors;
         });
 
         setupUI();
+        applyBootFrameCap();
 
         keepRunningInBackground = SessionLaunchExtras.keepRunningInBackground(this);
         if (keepRunningInBackground) SessionKeepAliveService.start(this);
@@ -412,6 +417,26 @@ import java.util.concurrent.Executors;
     private void setHiddenFramePacing(boolean hidden) {
         PresentExtension presentExtension = xServer.getExtension(PresentExtension.MAJOR_OPCODE);
         if (presentExtension != null) presentExtension.setHidden(hidden);
+    }
+
+    /**
+     * Caps the session at 30 FPS on screen (host frames and presenting
+     * clients) or lifts the cap. Any thread. A request made before the
+     * X server and its view exist is applied once they do.
+     */
+    public void setBootFrameCap(boolean capped) {
+        bootFrameCap = capped;
+        applyBootFrameCap();
+    }
+
+    private synchronized void applyBootFrameCap() {
+        XServer server = xServer;
+        XServerView view = xServerView;
+        if (server == null || view == null) return;
+        boolean capped = bootFrameCap;
+        PresentExtension presentExtension = server.getExtension(PresentExtension.MAJOR_OPCODE);
+        if (presentExtension != null) presentExtension.setBootFrameCap(capped);
+        view.getRenderer().setMinFrameIntervalMs(capped ? BOOT_FRAME_INTERVAL_MS : 0);
     }
 
     @Override
@@ -599,6 +624,19 @@ import java.util.concurrent.Executors;
         }
         catch (java.io.IOException e) {
             Log.e(TAG_GUEST_DEBUG, "Could not repair Wine font paths", e);
+        }
+
+        // Battle.net's format queries open every system.ini audio codec many times
+        // over, about 7 s of its start. Dev builds keep them for comparisons with
+        // the shortcut variable WHP_ACM_CODECS=keep.
+        try {
+            boolean keep = BuildConfig.DEBUG && shortcut != null
+                    && "keep".equals(new EnvVars(shortcut.getExtra("envVars")).get("WHP_ACM_CODECS"));
+            int changed = WineAcmCodecs.apply(new File(container.getRootDir(), ".wine"), keep);
+            if (changed > 0) Log.i(TAG_GUEST_DEBUG, (keep ? "Restored" : "Turned off") + " Wine audio codecs: " + changed);
+        }
+        catch (java.io.IOException e) {
+            Log.e(TAG_GUEST_DEBUG, "Could not update Wine audio codecs", e);
         }
 
         String startupSelection = String.valueOf(container.getStartupSelection());

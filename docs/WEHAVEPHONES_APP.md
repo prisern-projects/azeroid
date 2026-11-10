@@ -236,7 +236,7 @@ addon-provider mappings.
 | Family | Live | PTR | Beta | Title shown |
 | --- | --- | --- | --- | --- |
 | Retail | `_retail_` | `_ptr_`, `_xptr_` | `_beta_` | World of Warcraft (+ expansion from the build, e.g. *Midnight*) |
-| Forever | `_forever_` (product `wowf`, the Forever Stress Test option) | `_forever_ptr_` (expected) | `_classic_beta_` (`wow_classic_beta`, the launcher's Forever beta) | World of Warcraft: Forever |
+| Forever | `_forever_` (product `wowf`, listed as **Forever**) | `_forever_ptr_` (expected) | `_classic_beta_` (`wow_classic_beta`, the launcher's Forever beta) | World of Warcraft: Forever |
 | Classic progression | `_classic_` | `_classic_ptr_` | shares `_classic_beta_` (a 5.x build there) | World of Warcraft Classic (+ *Mists of Pandaria*) |
 | Titan-Reforged | `_classic_titan_` | | | Titan-Reforged Classic |
 | Anniversary | `_anniversary_` | | | Classic Anniversary |
@@ -684,6 +684,19 @@ Keep running in the background (2026-09-28):
     which holds the swapchain to 5 FPS. Host test:
     `scripts/test-wehavephones-runtime.sh` §3.
 
+Boot frame cap (2026-11-04):
+
+12. Until WoW first starts, a session runs at no more than 30 FPS, so
+    Battle.net, the launch overlay and the boot do not render
+    at full speed. `WowExitWatcher` calls
+    `XServerDisplayActivity.setBootFrameCap(true)` when the session starts
+    and lifts the cap for the rest of the session the first time it finds
+    the WoW process. The cap spaces host frames 33 ms apart
+    (`GLRenderer.setMinFrameIntervalMs`) and Present notifications the same
+    way (`PresentExtension.setBootFrameCap`). The hidden 5 FPS pacing wins
+    while the session is in the background. WoW itself is never capped by
+    this.
+
 Everything else reuses existing public APIs: `ImageFs`, `ContainerManager`,
 `Container`, `Shortcut`, `WinHandler`, `ProcessHelper`, `HttpUtils`.
 
@@ -763,6 +776,19 @@ The opt-in LOW memory mode is gone. What remains is default behavior:
   `Config.wtf` files) after every profile apply, with a snapshot and
   read-back. It also removes the old LOW `wehavephones-dxvk.conf` and its
   `DXVK_CONFIG_FILE` entry. It no longer writes the LOW CVar preset.
+- `MemoryTransforms.memoryCvars()` enforces `preloadPlayerModels=0` for every
+  game edition and device. Profile apply updates existing product configs, and
+  `WowFirstBoot` applies the same policy to new and selected clients on launch,
+  replacing a saved value of 1. Player models load on demand with the same
+  graphics settings, which can defer work until a model is first encountered.
+  The [S23+ Retail trials](RETAIL_MEMORY_TRIALS_2026_10_29.md) measured about
+  0.88 GiB less game backing, including swapped pages. Savings and first-encounter
+  behavior have not been measured across other clients, devices or busy scenes.
+  Before Battle.net opens, known edition directories and existing product
+  directories in an established install root also receive memory-only configs.
+  This covers a never-played client and another edition installed into that
+  root during the session. No absent install root is created. A first install
+  or an install into a different root receives the policy through the app's Play.
 - DXVK 2.3 suballocates GPU memory from 256 MB chunks by default. In Forever
   on the S23 (D3D11, Elwynn Forest) DXVK held 1524 MB for 1155 MB of
   resources, and the game process held about 370 MB more outside DXVK. With
