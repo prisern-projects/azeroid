@@ -38,6 +38,14 @@ public class WeHavePhonesSettingsFragment extends Fragment {
         setUpResolution(view.findViewById(R.id.SPGameResolution));
 
         CheckBox disableGamepad = view.findViewById(R.id.CBDisableVirtualGamepad);
+        CheckBox mobileTouch = view.findViewById(R.id.CBMobileTouch);
+        mobileTouch.setChecked(WeHavePhonesConfig.isMobileTouchEnabled(activity));
+        disableGamepad.setEnabled(!mobileTouch.isChecked());
+        mobileTouch.setOnCheckedChangeListener((button, checked) -> {
+            WeHavePhonesConfig.setMobileTouchEnabled(activity, checked);
+            disableGamepad.setEnabled(!checked);
+            activity.updateStageStatus(getString(R.string.wehavephones_mobile_touch_next_launch), false);
+        });
         disableGamepad.setChecked(WeHavePhonesConfig.isVirtualGamepadDisabled(activity));
         disableGamepad.setOnCheckedChangeListener((button, checked) -> {
             WeHavePhonesConfig.setVirtualGamepadDisabled(activity, checked);

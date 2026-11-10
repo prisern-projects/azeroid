@@ -2,6 +2,17 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.3.26] - 2026-11-10
+
+- **WeHavePhones' touch controls, as an option** (ported from upstream WeHavePhones as of `4d24630`). Turn on
+  *Settings → Mobile touch controls (experimental)* to play by touch instead of a controller: a movement stick,
+  drag to turn the camera, the action bars tapped directly, and Play/Menus modes with chat, bags, map and the
+  other windows one tap away. It works in Classic Era, Forever, BC, MoP and Retail. It installs its own WoW
+  add-on (WeHavePhonesTouch) and turns ConsolePort and the on-screen controller off while it is on; turning it
+  off restores them. It is off by default, so nothing changes unless you turn it on. Changes apply at the next
+  launch.
+- Android keyboard Enter now sends chat, and taps hit their target while the keyboard pushes the screen up.
+
 ## [0.3.25] - 2026-11-10
 
 Forever launch-week fixes from upstream WeHavePhones (cherry-picked):

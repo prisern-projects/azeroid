@@ -104,6 +104,12 @@
                     android:layout_height="wrap_content"
                     android:text="@string/azeroid_settings_native_textures" />
                 <CheckBox
+                    android:id="@+id/CBMobileTouch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/wehavephones_settings_mobile_touch" />
+                <CheckBox
                     android:id="@+id/CBDisableVirtualGamepad"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"

@@ -440,4 +440,174 @@ World of Warcraft, Warcraft, Battle.net and Blizzard Entertainment are trademark
     <string name="azeroid_wtf_working">Copying the WTF folder...</string>
     <string name="azeroid_wtf_imported">Imported %1$d files. Start the game to use them.</string>
     <string name="azeroid_wtf_exported">Exported to Download/WeHavePhones/WTF-export</string>
+
+    <string name="wehavephones_mobile_touch_next_launch">Saved. Touch controls and addon changes apply at the next game launch.</string>
+
+    <string name="wehavephones_settings_mobile_touch">Mobile touch controls (experimental)</string>
+
+    <string name="wehavephones_touch_act_assist">Assist</string>
+
+    <string name="wehavephones_touch_act_character">Character</string>
+
+    <string name="wehavephones_touch_act_chat">Chat</string>
+
+    <string name="wehavephones_touch_act_clear_modifier">No modifier</string>
+
+    <string name="wehavephones_touch_act_corpse">Nearby corpse</string>
+
+    <string name="wehavephones_touch_act_dive">Dive key</string>
+
+    <string name="wehavephones_touch_act_follow">Follow target</string>
+
+    <string name="wehavephones_touch_act_friend">Next friend</string>
+
+    <string name="wehavephones_touch_act_game_menu">Game menu</string>
+
+    <string name="wehavephones_touch_act_guide">Touch guide</string>
+
+    <string name="wehavephones_touch_act_help">Help</string>
+
+    <string name="wehavephones_touch_act_hide">Hide controls</string>
+
+    <string name="wehavephones_touch_act_honor">Honor</string>
+
+    <string name="wehavephones_touch_act_macros">Macros</string>
+
+    <string name="wehavephones_touch_act_nameplates">Enemy nameplates</string>
+
+    <string name="wehavephones_touch_act_page">Next action page</string>
+
+    <string name="wehavephones_touch_act_party">Party %1$d</string>
+
+    <string name="wehavephones_touch_act_pet">Pet spells</string>
+
+    <string name="wehavephones_touch_act_previous">Previous enemy</string>
+
+    <string name="wehavephones_touch_act_quests">Quest log</string>
+
+    <string name="wehavephones_touch_act_reply">Reply</string>
+
+    <string name="wehavephones_touch_act_reputation">Reputation</string>
+
+    <string name="wehavephones_touch_act_self">Self</string>
+
+    <string name="wehavephones_touch_act_sit">Sit or stand</string>
+
+    <string name="wehavephones_touch_act_size">%1$d%%</string>
+
+    <string name="wehavephones_touch_act_skills">Skills</string>
+
+    <string name="wehavephones_touch_act_social">Social</string>
+
+    <string name="wehavephones_touch_act_spellbook">Spellbook</string>
+
+    <string name="wehavephones_touch_act_talents">Talents</string>
+
+    <string name="wehavephones_touch_act_undo">Undo hotbar edit</string>
+
+    <string name="wehavephones_touch_act_walk">Walk or run</string>
+
+    <string name="wehavephones_touch_auto_run">Auto run</string>
+
+    <string name="wehavephones_touch_auto_run_hint">Strafe or drag the world to steer. Push forward or back to stop.</string>
+
+    <string name="wehavephones_touch_bags">Bags</string>
+
+    <string name="wehavephones_touch_cat_movement">Movement</string>
+
+    <string name="wehavephones_touch_cat_movement_hint">Slide the stick up to the runner. Hold until it turns blue, then release to auto run.</string>
+
+    <string name="wehavephones_touch_cat_targeting">Targeting</string>
+
+    <string name="wehavephones_touch_cat_targeting_hint">These use WoW\'s own bindings and work in combat. You can also tap unit frames.</string>
+
+    <string name="wehavephones_touch_cat_touch">Touch controls</string>
+
+    <string name="wehavephones_touch_cat_touch_hint">Interface size applies to every character. Hold a hotbar slot to change its action.</string>
+
+    <string name="wehavephones_touch_cat_typing">Typing and items</string>
+
+    <string name="wehavephones_touch_cat_typing_hint">Shift, Ctrl and Alt apply to the next tap, hold or drag, for example to split a stack.</string>
+
+    <string name="wehavephones_touch_cat_windows">Windows</string>
+
+    <string name="wehavephones_touch_cat_windows_hint">Opening a window switches to Menus for tapping, dragging and scrolling.</string>
+
+    <string name="wehavephones_touch_close">Close</string>
+
+    <string name="wehavephones_touch_dive">Dive</string>
+
+    <string name="wehavephones_touch_dive_hint">Hold Dive to swim down. Switch back in Menu, Movement.</string>
+
+    <string name="wehavephones_touch_guide_bags">Map and Bags open Menus by themselves</string>
+
+    <string name="wehavephones_touch_guide_camera">Drag to look · Pinch to zoom</string>
+
+    <string name="wehavephones_touch_guide_dismiss">Tap anywhere to continue</string>
+
+    <string name="wehavephones_touch_guide_escape">Esc: cancel a spell, clear the target or close a window</string>
+
+    <string name="wehavephones_touch_guide_inspect">Inspect: read tooltips without clicking</string>
+
+    <string name="wehavephones_touch_guide_jump">Hold to swim up</string>
+
+    <string name="wehavephones_touch_guide_keyboard">Keyboard: chat, names and search boxes</string>
+
+    <string name="wehavephones_touch_guide_menus_switch">Play: back to moving, looking and fighting</string>
+
+    <string name="wehavephones_touch_guide_menus_taps">Tap to click · Hold to right-click · Drag items and windows · Two fingers to scroll</string>
+
+    <string name="wehavephones_touch_guide_more">Menu: every window, target choice and touch setting</string>
+
+    <string name="wehavephones_touch_guide_play_switch">Menus: tap, drag and scroll windows without moving</string>
+
+    <string name="wehavephones_touch_guide_play_taps">Tap the game to click · Hold to right-click · Hold a hotbar slot to change it</string>
+
+    <string name="wehavephones_touch_guide_stick">Move · Hold on the runner, then release to auto run</string>
+
+    <string name="wehavephones_touch_guide_target">Tap: next enemy · Hold: nearby corpse</string>
+
+    <string name="wehavephones_touch_guide_use">Talk, loot or interact with your target</string>
+
+    <string name="wehavephones_touch_handle">Controls</string>
+
+    <string name="wehavephones_touch_handle_hint">Tap to open the controls. Drag to move this tab aside.</string>
+
+    <string name="wehavephones_touch_inspect">Inspect</string>
+
+    <string name="wehavephones_touch_inspect_hint">Touch or slide over anything to read it. Tap Inspect again to interact.</string>
+
+    <string name="wehavephones_touch_interact">Use</string>
+
+    <string name="wehavephones_touch_jump">Jump</string>
+
+    <string name="wehavephones_touch_jump_hint">Hold Jump to swim up</string>
+
+    <string name="wehavephones_touch_keyboard">Keyboard</string>
+
+    <string name="wehavephones_touch_map">Map</string>
+
+    <string name="wehavephones_touch_menu">Esc</string>
+
+    <string name="wehavephones_touch_menu_mode">Now in %1$s</string>
+
+    <string name="wehavephones_touch_menus">Menus</string>
+
+    <string name="wehavephones_touch_menus_hint">Tap to click · Hold to right-click · Drag items and windows · Two fingers scroll</string>
+
+    <string name="wehavephones_touch_modifier_cleared">Modifier cleared</string>
+
+    <string name="wehavephones_touch_modifier_hint">Applies to one tap, hold or drag, then lets go</string>
+
+    <string name="wehavephones_touch_more">Menu</string>
+
+    <string name="wehavephones_touch_next_modifier">Next tap: %1$s</string>
+
+    <string name="wehavephones_touch_play">Play</string>
+
+    <string name="wehavephones_touch_play_hint">Stick to move · Drag the world to look · Pinch to zoom · Hold to right-click</string>
+
+    <string name="wehavephones_touch_size_hint">Interface size %1$d%%</string>
+
+    <string name="wehavephones_touch_target">Target</string>
 </resources>

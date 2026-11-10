@@ -895,6 +895,7 @@ import java.util.concurrent.Executors;
                 if (now < suppressImeAutoShowUntilMs) {
                     return;
                 }
+                SessionInputExtras.onTextFocus(this, boxName);
                 if (wowImeFocused && imeBridgeView != null) {
                     return;
                 }
@@ -1056,10 +1057,8 @@ import java.util.concurrent.Executors;
 
             @Override
             public void onEditorAction(int actionCode) {
-                if (xServer == null) return;
-                if (view.isPrivateInput()) pressKey(XKeycode.KEY_ENTER, 1);
-                // No-op: keyboard hide should be driven by WoW focus loss (ime_focus=false),
-                // not by IME editor action / Enter.
+                submitImeText();
+                // WoW focus loss (ime_focus=false) closes the keyboard after submission.
             }
         });
     }
@@ -1082,6 +1081,13 @@ import java.util.concurrent.Executors;
     private void forwardImeCommitToWoW(CharSequence text) {
         if (text == null || text.length() == 0 || xServer == null) return;
         final String value = text.toString();
+
+        // Keyboards such as Gboard commit a newline for their Enter key, even
+        // when chat was opened manually and no WoW IME focus event arrived.
+        if (value.equals("\n") || value.equals("\r") || value.equals("\r\n")) {
+            submitImeText();
+            return;
+        }
 
         // Keep legacy behavior for non-WoW paths (notepad etc): send text as-is.
         if (!wowImeFocused) {
@@ -1111,6 +1117,12 @@ import java.util.concurrent.Executors;
         if (segmentStart < len) {
             sendImeTextToBridge(value.substring(segmentStart), false);
         }
+    }
+
+    private void submitImeText() {
+        if (xServer == null) return;
+        if (wowImeFocused) sendImeTextToBridge("", true);
+        else pressKey(XKeycode.KEY_ENTER, 1);
     }
 
     /**
