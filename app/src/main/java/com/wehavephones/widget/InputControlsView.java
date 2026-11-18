@@ -37,18 +37,17 @@ import java.util.TimerTask;
 
 public class InputControlsView extends View {
     public static final float DEFAULT_OVERLAY_OPACITY = 0.4f;
-    private boolean editMode = false;
-    private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private final Path path = new Path();
-    private final Path secondaryPath = new Path();
-    // WeHavePhones brand palette for the on-screen gamepad: light blue outlines over a faint navy
-    // backing, solid blue when pressed
+    // Brand palette: light blue outlines over a faint navy backing, solid blue when pressed
     private static final int OUTLINE_RGB = 0x8cc4f7;
     private static final int BACKING_RGB = 0x091628;
     private static final int PRESSED_RGB = 0x216bbc;
     private static final int PRESSED_OUTLINE_RGB = 0xbfe0ff;
     private static final int LABEL_RGB = 0xeef5ff;
-    private final ColorFilter colorFilter = new PorterDuffColorFilter(0xffffffff, PorterDuff.Mode.SRC_IN);
+    private boolean editMode = false;
+    private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Path path = new Path();
+    private final Path secondaryPath = new Path();
+    private final ColorFilter colorFilter = new PorterDuffColorFilter(0xff000000 | LABEL_RGB, PorterDuff.Mode.SRC_IN);
     private final Point cursor = new Point();
     private boolean readyToDraw = false;
     private boolean moveCursor = false;
@@ -218,10 +217,6 @@ public class InputControlsView extends View {
         this.showTouchscreenControls = showTouchscreenControls;
     }
 
-    public int getPrimaryColor() {
-        return Color.argb((int)(overlayOpacity * 255), 255, 255, 255);
-    }
-
     // Alphas are tuned for the default opacity and scale with the user's overlay opacity
     private int getOverlayColor(int rgb, float alpha) {
         float scaledAlpha = Mathf.clamp(alpha * overlayOpacity / DEFAULT_OVERLAY_OPACITY, 0, 1);
@@ -248,14 +243,6 @@ public class InputControlsView extends View {
         return getOverlayColor(LABEL_RGB, 1.0f);
     }
 
-    public Path getSecondaryPath() {
-        return secondaryPath;
-    }
-
-    public int getSecondaryColor() {
-        return Color.argb((int)(overlayOpacity * 255), 2, 119, 189);
-    }
-
     private synchronized ControlElement intersectElement(float x, float y) {
         if (profile != null) {
             for (ControlElement element : profile.getElements()) {
@@ -271,6 +258,10 @@ public class InputControlsView extends View {
 
     public Path getPath() {
         return path;
+    }
+
+    public Path getSecondaryPath() {
+        return secondaryPath;
     }
 
     public ColorFilter getColorFilter() {
@@ -401,54 +392,27 @@ public class InputControlsView extends View {
                     float x = event.getX(actionIndex);
                     float y = event.getY(actionIndex);
 
-                    // Deliver this gesture's moves as they arrive, not batched to the next frame.
-                    requestUnbufferedDispatch(event);
                     touchpadView.setPointerButtonLeftEnabled(true);
                     for (ControlElement element : profile.getElements()) {
+                        if (element.handleTouchDown(pointerId, x, y)) handled = true;
                         if (element.getBindingAt(0) == Binding.MOUSE_LEFT_BUTTON) {
                             touchpadView.setPointerButtonLeftEnabled(false);
-                        }
-                    }
-                    // One element per touch: the closest button whose padded area it is in
-                    // (buttons win), else a stick or D-pad it hits, else a stick it lands near.
-                    ControlElement nearest = nearestFreeButton(x, y, null);
-                    if (nearest != null) handled = nearest.pressButton(pointerId, x, y);
-                    if (!handled) {
-                        for (ControlElement element : profile.getElements()) {
-                            if (element.getType() == ControlElement.Type.BUTTON) continue;
-                            if (element.handleTouchDown(pointerId, x, y)) {
-                                handled = true;
-                                break;
-                            }
-                        }
-                    }
-                    if (!handled) {
-                        for (ControlElement element : profile.getElements()) {
-                            if (element.handleNearbyTouchDown(pointerId, x, y)) {
-                                handled = true;
-                                break;
-                            }
                         }
                     }
                     if (!handled) touchpadView.onTouchEvent(event);
                     break;
                 }
                 case MotionEvent.ACTION_MOVE: {
-                    // Elements track pointer ids; indexes shift when an earlier finger lifts.
-                    boolean unhandled = false;
-                    for (int i = 0, count = event.getPointerCount(); i < count; i++) {
+                    for (byte i = 0, count = (byte)event.getPointerCount(); i < count; i++) {
                         float x = event.getX(i);
                         float y = event.getY(i);
-                        int id = event.getPointerId(i);
 
                         handled = false;
                         for (ControlElement element : profile.getElements()) {
-                            if (element.handleTouchMove(id, x, y)) handled = true;
+                            if (element.handleTouchMove(i, x, y)) handled = true;
                         }
-                        if (!handled) handled = slideButton(id, x, y);
-                        if (!handled) unhandled = true;
+                        if (!handled) touchpadView.onTouchEvent(event);
                     }
-                    if (unhandled) touchpadView.onTouchEvent(event);
                     break;
                 }
                 case MotionEvent.ACTION_UP:
@@ -487,61 +451,6 @@ public class InputControlsView extends View {
         handleInputEvent(binding, isActionDown, 0);
     }
 
-    private ControlElement nearestFreeButton(float x, float y, ControlElement except) {
-        ControlElement nearest = null;
-        float best = Float.MAX_VALUE;
-        for (ControlElement element : profile.getElements()) {
-            if (element == except || !element.isFree()) continue;
-            float distance = element.hitDistance(x, y);
-            if (distance >= 0 && distance < best) {
-                best = distance;
-                nearest = element;
-            }
-        }
-        return nearest;
-    }
-
-    /**
-     * A finger holding a button that slides onto another button hands the press over without
-     * lifting. Leaving into empty space keeps the button held (a held modifier stays held).
-     */
-    private boolean slideButton(int pointerId, float x, float y) {
-        ControlElement held = null;
-        for (ControlElement element : profile.getElements()) {
-            if (element.isButtonHeldBy(pointerId)) {
-                held = element;
-                break;
-            }
-        }
-        if (held == null) return false;
-        if (held.hitDistance(x, y) < 0) {
-            ControlElement next = nearestFreeButton(x, y, held);
-            if (next != null) {
-                held.handleTouchUp(pointerId);
-                next.pressButton(pointerId, x, y);
-                invalidate();
-            }
-        }
-        return true;
-    }
-
-    private boolean gamepadBatch;
-    private boolean gamepadBatchDirty;
-
-    /** Collects a stick's four axis updates into one state send to the game. */
-    public void beginGamepadBatch() {
-        gamepadBatch = true;
-        gamepadBatchDirty = false;
-    }
-
-    public void endGamepadBatch() {
-        gamepadBatch = false;
-        if (!gamepadBatchDirty) return;
-        gamepadBatchDirty = false;
-        WinHandler winHandler = xServer != null ? xServer.getWinHandler() : null;
-        if (winHandler != null && profile != null) winHandler.onVirtualGamepadInput(profile.getGamepadState());
-    }
-
     public void handleInputEvent(Binding binding, boolean isActionDown, float offset) {
         if (binding.isGamepad()) {
             WinHandler winHandler = xServer != null ? xServer.getWinHandler() : null;
@@ -568,8 +477,7 @@ public class InputControlsView extends View {
                 state.dpad[binding.ordinal() - Binding.GAMEPAD_DPAD_UP.ordinal()] = isActionDown;
             }
 
-            if (gamepadBatch) gamepadBatchDirty = true;
-            else if (winHandler != null) winHandler.onVirtualGamepadInput(state);
+            if (winHandler != null) winHandler.onVirtualGamepadInput(state);
         }
         else {
             if (binding == Binding.MOUSE_MOVE_LEFT || binding == Binding.MOUSE_MOVE_RIGHT) {

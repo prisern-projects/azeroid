@@ -2,6 +2,14 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.3.29] - 2026-11-18
+
+- **On-screen controller is now WeHavePhones' controller, unchanged** (upstream `5a91b5c`): their look, layout
+  and touch handling, including their touchpad-style camera pad on the right. Azeroid's own controller code
+  (floating sticks, button sliding, padded hits, double-tap L3/R3, unbuffered touch) is removed.
+- Known upstream issue kept as is: a stick can stop responding when another finger lifts while it is held
+  (their move handling matches touches by list position, not finger id).
+
 ## [0.3.28] - 2026-11-18
 
 - **WeHavePhones' on-screen controller.** The on-screen gamepad now uses WeHavePhones' look (brand-blue outlines
