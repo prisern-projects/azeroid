@@ -2,6 +2,15 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.3.28] - 2026-11-18
+
+- **WeHavePhones' on-screen controller.** The on-screen gamepad now uses WeHavePhones' look (brand-blue outlines
+  over a faint navy backing, rounded shoulder buttons, a rounded D-pad with arrows, solid blue while held;
+  upstream `20a76aa`) and their layout: D-pad and camera stick high, left stick and ABXY low, LT/LB and RT/RB at
+  the sides, View/Menu bottom centre, L3/R3 at the bottom. Kept from Azeroid: the camera side is a real stick
+  (theirs is a touchpad-style camera pad), sticks centre under the thumb, sliding between buttons, larger touch
+  areas, unbuffered touch and the finger-tracking fix. Azeroid's own gamepad style is removed.
+
 ## [0.3.27] - 2026-11-18
 
 From upstream WeHavePhones (up to `5a91b5c`):
