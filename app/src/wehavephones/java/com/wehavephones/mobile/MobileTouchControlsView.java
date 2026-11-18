@@ -14,6 +14,7 @@ import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.SystemClock;
 import android.view.DisplayCutout;
+import android.view.HapticFeedbackConstants;
 import android.view.InputDevice;
 import android.view.MotionEvent;
 import android.view.View;
@@ -182,11 +183,13 @@ public final class MobileTouchControlsView extends View implements MobileTouchIn
             }
         }
         lastViewport = viewport();
-        layout = new MobileTouchLayout(getWidth(), getHeight(), density, left, top, right, bottom, lastViewport, input.isUiMode());
+        layout = new MobileTouchLayout(getWidth(), getHeight(), density, left, top, right, bottom, lastViewport, input.isUiMode(),
+                MobileTouchLayout.controlScale(WeHavePhonesConfig.getMobileTouchScale(getContext())));
         insetLeft = left; insetTop = top; insetRight = right; insetBottom = bottom;
         radius = layout.radius;
         stickX = layout.stickX;
         stickY = layout.stickY;
+        input.setWheel(layout.wheelX, layout.wheelY, MobileTouchLayout.WHEEL_DEAD * layout.wheelUnit);
         knobX = stickX;
         knobY = stickY;
         for (int i = 0; i < buttons.length; i++) {
@@ -217,6 +220,9 @@ public final class MobileTouchControlsView extends View implements MobileTouchIn
                     .put("stick", new JSONArray().put(origin[0] + stickX).put(origin[1] + stickY).put(radius));
             if (lastViewport != null) json.put("viewport", new JSONArray().put(origin[0] + lastViewport.left)
                     .put(origin[1] + lastViewport.top).put(origin[0] + lastViewport.right).put(origin[1] + lastViewport.bottom));
+            // The action wheel's hub and unit, when it takes swipes.
+            if (WeHavePhonesConfig.isMobileTouchWheel(getContext()) && layout.wheelReach > 0) json.put("wheel",
+                    new JSONArray().put(origin[0] + layout.wheelX).put(origin[1] + layout.wheelY).put(layout.wheelUnit));
             JSONObject keys = new JSONObject();
             for (int i = 0; i < buttons.length; i++) {
                 RectF rect = buttons[i];
@@ -246,6 +252,7 @@ public final class MobileTouchControlsView extends View implements MobileTouchIn
     private MobileTouchInput.Zone zone(float x, float y) {
         for (int i = 0; i < buttons.length; i++) if (buttons[i].contains(x, y)) return ZONES[i];
         if (toolbarCollapsed || input.isUiMode()) return MobileTouchInput.Zone.UI;
+        if (WeHavePhonesConfig.isMobileTouchWheel(getContext()) && layout.inWheel(x, y)) return MobileTouchInput.Zone.WHEEL;
         if (Math.hypot(x - stickX, y - stickY) <= radius * 1.2f) return MobileTouchInput.Zone.STICK;
         MobileTouchLayout.Bounds viewport = viewport();
         if (viewport.contains(x, y) && MobileTouchInput.isCameraArea(x - viewport.left, y - viewport.top,
@@ -834,6 +841,14 @@ public final class MobileTouchControlsView extends View implements MobileTouchIn
                     pulse(target.centerX(), target.centerY());
                 }
                 break;
+            case RING_NEXT:
+            case RING_PREV:
+                // Session bindings from the touch addon: Shift-F10 and Shift-F11 click its secure ring buttons.
+                if (down) {
+                    chord(XKeycode.KEY_SHIFT_L, key == MobileTouchInput.Key.RING_NEXT ? XKeycode.KEY_F10 : XKeycode.KEY_F11);
+                    performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK);
+                }
+                return;
             case AUTORUN:
                 if (!down) post(() -> banner(runner, getContext().getString(R.string.wehavephones_touch_auto_run),
                         getContext().getString(R.string.wehavephones_touch_auto_run_hint)));
@@ -967,9 +982,9 @@ public final class MobileTouchControlsView extends View implements MobileTouchIn
 
     @Override public boolean isActive(MobileTouchMenu.Action action) {
         switch (action) {
-            case SIZE_125: return WeHavePhonesConfig.getMobileTouchScale(getContext()) == 1.25f;
-            case SIZE_150: return WeHavePhonesConfig.getMobileTouchScale(getContext()) == 1.5f;
-            case SIZE_175: return WeHavePhonesConfig.getMobileTouchScale(getContext()) == 1.75f;
+            case SIZE_75: case SIZE_90: case SIZE_110: case SIZE_125: case SIZE_150: case SIZE_175:
+                return WeHavePhonesConfig.getMobileTouchScale(getContext()) == action.arg / 100f;
+            case WHEEL: return WeHavePhonesConfig.isMobileTouchWheel(getContext());
             case DIVE: return diving;
             case SHIFT: return nextModifier == XKeycode.KEY_SHIFT_L;
             case CTRL: return nextModifier == XKeycode.KEY_CTRL_L;
@@ -1041,9 +1056,14 @@ public final class MobileTouchControlsView extends View implements MobileTouchIn
                 nextModifier = null;
                 banner(icons[MobileTouchLayout.MORE], getContext().getString(R.string.wehavephones_touch_modifier_cleared), null);
                 break;
-            case SIZE_125: setScale(1.25f, XKeycode.KEY_F4); break;
-            case SIZE_150: setScale(1.5f, XKeycode.KEY_F5); break;
-            case SIZE_175: setScale(1.75f, XKeycode.KEY_F6); break;
+            // Each size has its own chord, matching the hidden buttons in the touch addon.
+            // Ctrl-F9 and Ctrl-F10 are stance keys no class has. Shift-F10 and F11 change wheel rings.
+            case SIZE_75: setScale(.75f, ctrl, XKeycode.KEY_F9); break;
+            case SIZE_90: setScale(.9f, ctrl, XKeycode.KEY_F10); break;
+            case SIZE_110: setScale(1.1f, shift, XKeycode.KEY_F12); break;
+            case SIZE_125: setScale(1.25f, shift, XKeycode.KEY_F4); break;
+            case SIZE_150: setScale(1.5f, shift, XKeycode.KEY_F5); break;
+            case SIZE_175: setScale(1.75f, shift, XKeycode.KEY_F6); break;
             case GUIDE: showGuide(); break;
             case HIDE:
                 setWindows(true);
@@ -1055,6 +1075,16 @@ public final class MobileTouchControlsView extends View implements MobileTouchIn
                 break;
             case UNDO: chord(shift, XKeycode.KEY_F3); break;
             case PAGE: tap(XKeycode.KEY_N); break;
+            case WHEEL: {
+                boolean wheel = !WeHavePhonesConfig.isMobileTouchWheel(getContext());
+                WeHavePhonesConfig.setMobileTouchWheel(getContext(), wheel);
+                // Ctrl-F11 shows the wheel and Ctrl-F12 returns the stock grid, after combat if needed.
+                chord(XKeycode.KEY_CTRL_L, wheel ? XKeycode.KEY_F11 : XKeycode.KEY_F12);
+                banner(activity.getDrawable(R.drawable.wehavephones_touch_ic_squares_four).mutate(),
+                        getContext().getString(wheel ? R.string.wehavephones_touch_wheel_on : R.string.wehavephones_touch_wheel_off),
+                        wheel ? getContext().getString(R.string.wehavephones_touch_wheel_hint) : null);
+                break;
+            }
         }
         invalidate();
     }
@@ -1075,9 +1105,11 @@ public final class MobileTouchControlsView extends View implements MobileTouchIn
         parkPointerForChat();
     }
 
-    private void setScale(float scale, XKeycode key) {
+    private void setScale(float scale, XKeycode modifier, XKeycode key) {
         WeHavePhonesConfig.setMobileTouchScale(getContext(), scale);
-        chord(XKeycode.KEY_SHIFT_L, key);
+        chord(modifier, key);
+        cancelTouches();
+        refreshLayout();
         banner(activity.getDrawable(R.drawable.wehavephones_touch_ic_text_aa).mutate(),
                 getContext().getString(R.string.wehavephones_touch_size_hint, Math.round(scale * 100)), null);
     }

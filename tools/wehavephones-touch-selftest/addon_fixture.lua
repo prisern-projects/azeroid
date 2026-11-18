@@ -1,6 +1,10 @@
 local original = {GamePadEnable="1", InputDeviceInterfaceStyle="1", useUiScale="0", uiScale="0.64", lootUnderMouse="1", alwaysCompareItems="0",
     SoftTargetInteract="1", SoftTargetInteractArc="0", SoftTargetIconInteract="0", nameplateShowEnemies="0"}
 local values, held, objects, all = {}, {}, {}, {}
+-- The interface sizes the touch menu offers, matching MobileTouchSetup.SCALES.
+local TOUCH_SCALES = {.75,.9,1.1,1.25,1.5,1.75}
+-- The native control size for the current interface size, as in MobileTouchLayout.controlScale.
+local function controls() return .5+(WeHavePhonesTouchDB.touchScale or 1.5)/3 end
 for k,v in pairs(original) do values[k]=v end
 local combat, cursor, layout, notices, actionPage = false, nil, 0, 0, 1
 local extraBars = {false,false,true,false,false,false,false}
@@ -62,7 +66,44 @@ function methods:GetEffectiveScale()
     return self:GetScale()*((not self.ignoreParentScale and self.parent) and self.parent:GetEffectiveScale() or 1)
 end
 function methods:IsShown() return self.visible==true end
-function methods:SetAttribute(key,value) assert(not combat) self[key]=value end
+-- Restricted snippets may change attributes in combat. Everything else may not.
+local secure=false
+local function runSnippet(code, header, ...)
+    local was=secure
+    secure=true
+    assert(load(header..code,"snippet","t",_ENV))(...)
+    secure=was
+end
+function methods:SetAttribute(key,value)
+    assert(not combat or secure)
+    self[key]=value
+    if key:sub(1,1)=="_" then return end
+    if self._onattributechanged then runSnippet(self._onattributechanged,"local self,name,value=...\n",self,key,value) end
+    if self.scripts.OnAttributeChanged then self.scripts.OnAttributeChanged(self,key,value) end
+end
+function methods:GetAttribute(key) return self[key] end
+function SecureHandlerSetFrameRef(frame,label,object) frame.refs=frame.refs or {} frame.refs[label]=object end
+function methods:GetFrameRef(label) return self.refs[label] end
+-- A secure click: the handler's own snippet, as WoW runs it from a binding or a tap.
+function secureClick(object,button,down)
+    runSnippet(object._onclick,"local self,button,down=...\n",object,button,down)
+end
+-- State drivers for the special bars: "[conditions] show; hide" or the reverse.
+local drivers, special = {}, false
+local function drive(object)
+    local condition=drivers[object]
+    object.visible=(condition:find("show; hide$")~=nil)==special
+end
+function RegisterStateDriver(object,state,condition)
+    assert(not combat and state=="visibility")
+    drivers[object]=condition
+    drive(object)
+end
+function UnregisterStateDriver(object) assert(not combat) drivers[object]=nil end
+function setSpecialBar(value)
+    special=value
+    for object in pairs(drivers) do drive(object) end
+end
 function methods:RegisterForClicks(...) self.clicks={...} end
 function methods:SetScript(name,fn) self.scripts[name]=fn end
 function methods:HookScript(name,fn) self.scripts[name]=fn end
@@ -72,6 +113,8 @@ function methods:SetShown(v) self.visible=v end
 function methods:SetEnabled(v) self.enabled=v end
 function methods:SetText(v) self.text=v end
 function methods:SetFontString(label) self.font=label end
+function methods:SetTexCoord(...) self.texCoord={...} end
+function methods:SetFont(...) self.fontFile={...} end
 function methods:GetFontString() return self.font end
 function methods:GetID() return self.id end
 function methods:SetVertexColor(...) self.color={...} end
@@ -86,12 +129,16 @@ for _,name in ipairs({"RegisterEvent","RegisterUnitEvent","ClearAllPoints","SetF
     "SetTexture","SetJustifyH","SetBackdropColor","SetBackdropBorderColor","SetGradient","SetThickness",
     "SetColorTexture","SetAllPoints","SetHitRectInsets"}) do methods[name]=function() end end
 function methods:EnableMouse(enabled) self.mouse=enabled end
+function methods:GetFrameLevel() return self.level or 1 end
+function methods:SetFrameLevel(level) self.level=level end
 function methods:SetStartPoint(...) self.start={...} end
 function methods:SetEndPoint(...) self.finish={...} end
 function CreateColor(r,g,b,a) return {r=r,g=g,b=b,a=a} end
 function UnitBuff(_,i) if i<=buffs then return "Buff "..i end end
-function CreateFrame(_,name,parent)
-    local object=setmetatable({name=name, scripts={}, parent=parent}, {__index=methods})
+function CreateFrame(_,name,parent,template)
+    local object=setmetatable({name=name, scripts={}, parent=parent, template=template}, {__index=methods})
+    -- Blizzard's action buttons are 45 units on Retail and 36 on Classic.
+    if template and template:find("ActionBarButtonTemplate") then object.width,object.height=45,45 end
     if name then objects[name]=object _G[name]=object end
     table.insert(all,object)
     return object
@@ -215,6 +262,23 @@ for _, name in ipairs({"StanceBar","PetActionBar","PossessActionBar","MicroMenuC
     object:SetPoint("BOTTOMLEFT",UIParent,"BOTTOMLEFT",2,3)
     object:Show()
 end
+-- Blizzard's stance bar lays out a container per form. A druid can have six.
+local stanceContainers={}
+for i=1,6 do
+    local container=CreateFrame("Frame","StanceButtonContainer"..i,StanceBar)
+    container:SetSize(30,30)
+    container:SetPoint("TOPLEFT",StanceBar,"TOPLEFT",(i-1)*33,0)
+    stanceContainers[i]=container
+end
+local function setForms(count)
+    StanceBar.shownButtonContainers={}
+    for i=1,count do StanceBar.shownButtonContainers[i]=stanceContainers[i] end
+end
+setForms(2)
+-- Forever's swing timers, which Blizzard stacks above the action bar.
+SwingTimerMainHandFrame=CreateFrame("Frame","SwingTimerMainHandFrame",UIParent)
+SwingTimerMainHandFrame:SetSize(426,30)
+SwingTimerMainHandFrame:SetPoint("BOTTOM",UIParent,"BOTTOM",0,120)
 QuestWatchFrame=CreateFrame("Frame",FIXTURE_PROJECT==19 and "WatchFrame" or "QuestWatchFrame",UIParent)
 QuestWatchFrame:SetSize(280,160)
 QuestWatchFrame:SetPoint("TOPRIGHT",UIParent,"TOPRIGHT",-10,-200)
@@ -266,7 +330,7 @@ local function chatIcon()
     local line=objects.WeHavePhonesTouchChatSize.lines[1]
     return line.finish[3]>line.start[3] and "out" or "in"
 end
-local function boot(enabled, scale)
+local function boot(enabled, scale, wheel)
     -- Reloading WoW discards the previous Lua runtime and its secure hooks.
     -- Keep the DB and frame geometry here, but never run old enabled callbacks
     -- while exercising a new disabled addon instance.
@@ -277,7 +341,7 @@ local function boot(enabled, scale)
     secureHooks={}
     local chunk=assert(load(ADDON,"Touch.lua"))
     local before=#all
-    chunk("WeHavePhonesTouch",{enabled=enabled,scale=scale})
+    chunk("WeHavePhonesTouch",{enabled=enabled,scale=scale,wheel=wheel})
     active=all[before+1]
     active.scripts.OnEvent(active,"PLAYER_LOGIN")
 end
@@ -409,14 +473,14 @@ local function exportGeometry(object, width, height, kind, fullHeight)
     local scale=object:GetEffectiveScale()/UIParent:GetEffectiveScale()
     if object.point[3]~="CENTER" then
         local left,bottom,w,h=topRect(object)
-        geometry:write(table.concat({width,height,left,bottom,w,h,kind},"\t"),"\n")
+        geometry:write(table.concat({width,height,left,bottom,w,h,kind,WeHavePhonesTouchDB.touchScale},"\t"),"\n")
         return
     end
     local x=width/2+object.point[4]*scale
     local y=height/2+object.point[5]*scale
     local h=(fullHeight or object:GetHeight())*scale
     if object.point[1]=="TOPLEFT" then y=y-h end
-    geometry:write(table.concat({width,height,x,y,object:GetWidth()*scale,h,kind},"\t"),"\n")
+    geometry:write(table.concat({width,height,x,y,object:GetWidth()*scale,h,kind,WeHavePhonesTouchDB.touchScale},"\t"),"\n")
 end
 local function checkChatLayout(width,height,aspect)
     local sizeKey=objects.WeHavePhonesTouchChatSize
@@ -428,7 +492,7 @@ local function checkChatLayout(width,height,aspect)
         "the expand key follows compact chat")
     assert(ChatFrame1Tab.mouse==false and ChatFrame2Tab.mouse==false,
         "compact chat tabs take no touches, so none can be switched or pulled out beside the stick")
-    local radius=math.min(math.max(height,width/1.59)*(aspect<1.6 and .12 or .13),width*.13)
+    local radius=math.min(math.max(height,width/1.59)*(aspect<1.6 and .12 or .13),width*.13)*controls()
     local stickRight=math.max(radius*1.2+width*.025,width*.12)+radius*1.2
     local keyLeft=width/2+compactX+ChatFrame1:GetWidth()+6-10
     assert(keyLeft>stickRight and keyLeft+44<=width,
@@ -441,7 +505,7 @@ local function checkChatLayout(width,height,aspect)
             "the complete expand target stays clear of "..object:GetName().." at "..width.."x"..height)
     end
     if geometry then
-        geometry:write(table.concat({width,height,keyLeft,keyBottom,44,44,"chat-size"},"\t"),"\n")
+        geometry:write(table.concat({width,height,keyLeft,keyBottom,44,44,"chat-size",WeHavePhonesTouchDB.touchScale},"\t"),"\n")
     end
     sizeKey.scripts.OnClick(sizeKey)
     local readingHeight=ChatFrame1:GetHeight()
@@ -459,7 +523,9 @@ local function checkChatLayout(width,height,aspect)
     local historyTop=height/2+ChatFrame1.point[5]
     assert(historyTop+32<inputBottom and historyTop-ChatFrame1:GetHeight()>=height*.58-.001,
         "chat tabs and message history fit below the input and above the keyboard")
-    assert(ChatFrame1:GetHeight()>14 and ChatFrame1:GetHeight()<readingHeight,
+    -- Small interface sizes leave room for the full eleven rows while typing.
+    assert(ChatFrame1:GetHeight()>14 and (ChatFrame1:GetHeight()<readingHeight
+        or WeHavePhonesTouchDB.touchScale<1 and ChatFrame1:GetHeight()==readingHeight),
         "typing leaves readable history while reserving space for a tall landscape keyboard at "
             ..width.."x"..height..", history "..ChatFrame1:GetHeight()..", reading "..readingHeight)
     active.scripts.OnEvent(active,"DISPLAY_SIZE_CHANGED")
@@ -477,7 +543,7 @@ local function checkChatLayout(width,height,aspect)
         and ChatFrame1EditBox:GetWidth()==300 and chatIcon()=="out",
         "collapsing while typing ends focus and restores the stock edit box geometry")
 end
-for _,scale in ipairs({1.25,1.5,1.75}) do
+for _,scale in ipairs(TOUCH_SCALES) do
     WeHavePhonesTouchDB.touchScale=scale
     for _,aspect in ipairs({1,6/5,5/4,4/3,3/2,16/10,16/9,2,19.5/9,21/9,32/9}) do
         local height=768/scale
@@ -515,6 +581,9 @@ for _,scale in ipairs({1.25,1.5,1.75}) do
             end
         end
         assert(StanceBar.point[3]=="CENTER" and PetActionBar.point[3]=="CENTER","class controls have a separate footer")
+        local swingScale=SwingTimerMainHandFrame:GetEffectiveScale()/UIParent:GetEffectiveScale()
+        assert(swingScale<=.5 and 426*swingScale<=math.min(width*.8,height*16/9)*.18+.01
+            and SwingTimerMainHandFrame.point[4]==0,"swing timers shrink where Blizzard stacks them")
         local compactTop=aspect<1.59
         local rail=compactTop and (width-math.min(width*.8,height*16/9))/2 or 0
         local zoneLeft=width-(.312+math.max(.42,math.min(.75,aspect-1.1)))*height
@@ -530,12 +599,12 @@ for _,scale in ipairs({1.25,1.5,1.75}) do
         for _,name in ipairs({"BuffFrame","DebuffFrame"}) do
             local al,ab,aw,ah=topRect(_G[name])
             if compactTop then assert(al+aw<=width-math.max(rail,width*.16)+.01 and ab+ah<=mb+.01,"narrower games show auras under the minimap")
-            else assert(ab+ah<=height*.86+.01 and al+aw<=width-.30*height+.01,"wide games show auras under the toolbar band") end
+            else assert(ab+ah<=height*(1-.14*controls())+.01 and al+aw<=width-.30*height+.01,"wide games show auras under the toolbar band") end
             exportGeometry(_G[name],width,height,"aura")
         end
         if not compactTop then
             local wl,wb,ww,wh=topRect(UIWidgetTopCenterContainerFrame)
-            assert(wb+wh<=height*.86+.01,"top-center widgets start below the toolbar band")
+            assert(wb+wh<=height*(1-.14*controls())+.01,"top-center widgets start below the toolbar band")
             exportGeometry(UIWidgetTopCenterContainerFrame,width,height,"widget")
         end
         exportGeometry(MinimapCluster,width,height,"minimap")
@@ -576,6 +645,150 @@ for _,scale in ipairs({1.25,1.5,1.75}) do
         checkChatLayout(width,height,aspect)
     end
 end
+-- The action wheel on Action Bars 6 to 8, for wide games.
+for _,name in ipairs({"MultiBar5","MultiBar6","MultiBar7"}) do
+    local object=CreateFrame("Frame",name,UIParent)
+    object:SetSize(500,40)
+    object:SetPoint("BOTTOM",UIParent,"BOTTOM",0,200)
+    object:Show()
+end
+-- Retail's main bar takes the mouse over its area at a high frame level.
+ActionButton1:SetFrameLevel(50)
+boot(true,nil,true)
+local wheel=objects.WeHavePhonesTouchWheel
+local slots={}
+for i=1,9 do slots[i]=objects["WeHavePhonesTouchWheelSlot"..i] end
+assert(wheel and slots[9] and slots[1].template=="ActionBarButtonTemplate","the wheel uses Blizzard's action buttons")
+for i=1,9 do assert(slots[i].action==144+i and slots[i].type2=="" and slots[i].showgrid==1,"ring 1 shows slots 145 to 153") end
+assert(held["SHIFT-F10"]=="WeHavePhonesTouchWheelNext" and held["SHIFT-F11"]=="WeHavePhonesTouchWheelPrevious",
+    "swipes reach the secure ring buttons through session bindings")
+assert(not MultiBar5.visible and not MultiBar6.visible and not MultiBar7.visible,"Action Bars 6 to 8 do not repeat the wheel")
+assert(wheel.visible and not ActionButton1.visible and not ActionButton12.visible and not objects.WeHavePhonesTouchPager.visible,
+    "the wheel replaces the stock grid and its page switcher")
+local function wheelRect(object)
+    local left,bottom,w,h=topRect(object)
+    return {left,bottom,left+w,bottom+h}
+end
+for _,scale in ipairs(TOUCH_SCALES) do
+    WeHavePhonesTouchDB.touchScale=scale
+    for _,aspect in ipairs({1,4/3,3/2,16/10,16/9,2,19.5/9,21/9,32/9}) do
+        local height=768/scale
+        local width=height*aspect
+        UIParent:SetSize(width,height)
+        for _,forms in ipairs({2,6}) do
+        setForms(forms)
+        active.scripts.OnEvent(active,"DISPLAY_SIZE_CHANGED")
+        if aspect<1.59 then
+            assert(not wheel.visible and ActionButton1.visible and ActionButton9.visible,"tablet shapes keep the stock grid")
+        else
+            assert(wheel.visible and not ActionButton1.visible,"wide games show the wheel")
+            assert(wheel:GetFrameLevel()>50,"the wheel and its hub stack above the stock action bar, which takes the mouse")
+            local rects={wheelRect(objects.WeHavePhonesTouchWheelHub)}
+            local hubRect=rects[1]
+            close(hubRect[3]-hubRect[1],height*.107*controls(),"the hub matches the native keys on a 16:9 game")
+            for i=1,9 do
+                local r=wheelRect(slots[i])
+                close(r[3]-r[1],height*.10*controls(),"slots are a tenth of the game's height at the default size")
+                assert(r[1]>=0 and r[3]<=width and r[2]>=0 and r[4]<=height*.5,"the wheel stays in the lower right of the screen")
+                rects[#rects+1]=r
+            end
+            for i,a in ipairs(rects) do
+                for j=i+1,#rects do
+                    local b=rects[j]
+                    assert(a[3]<=b[1] or b[3]<=a[1] or a[4]<=b[2] or b[4]<=a[2],"wheel slots and hub never overlap")
+                end
+            end
+            for i=2,#rects do
+                local r,m=rects[i],height*.015
+                assert(hubRect[3]+m<=r[1] or r[3]+m<=hubRect[1] or hubRect[4]+m<=r[2] or r[4]+m<=hubRect[2],
+                    "the hub key sits close to the slots without crowding them")
+            end
+            for _,bar in ipairs({StanceBar,PetActionBar}) do
+                local l,b,w,h=topRect(bar)
+                for _,r in ipairs(rects) do
+                    assert(l+w<=r[1] or r[3]<=l or b+h<=r[2] or r[4]<=b,"class controls end before the wheel")
+                end
+            end
+            -- Stances and forms sit right of the wheel's touch area, under Jump, on the hub's line.
+            -- The hub key sits up the arcs from the wheel's center.
+            local hubX,hubY=objects.WeHavePhonesTouchWheelHub.point[4]*objects.WeHavePhonesTouchWheelHub:GetScale()+.04*height*controls(),
+                objects.WeHavePhonesTouchWheelHub.point[5]*objects.WeHavePhonesTouchWheelHub:GetScale()-.069*height*controls()
+            if aspect<=2.4 then
+                assert(StanceBar.point[3]=="BOTTOMLEFT" and PetActionBar.point[3]=="CENTER","only the stance bar leaves the footer")
+                local barLeft,barBottom,_,barHeight=topRect(StanceBar)
+                local low,high,rows=math.huge,-math.huge,{}
+                for i=1,forms do
+                    local container=stanceContainers[i]
+                    local s=container:GetEffectiveScale()/UIParent:GetEffectiveScale()
+                    assert(container.point[2]==StanceBar and container.point[1]=="TOPLEFT")
+                    local l=barLeft+container.point[4]*s
+                    local top=barBottom+barHeight+container.point[5]*s
+                    local w=container:GetWidth()*s
+                    assert(w<=height*.07*controls()+.01,"stance buttons are smaller than wheel slots")
+                    assert(l>=hubX+.125*height*controls() and l+w<=width and top-w>=0,"stances fill the lower right corner")
+                    for _,r in ipairs(rects) do
+                        assert(l+w<=r[1] or r[3]<=l or top<=r[2] or r[4]<=top-w,"stances stay clear of the wheel")
+                    end
+                    low,high=math.min(low,top-w),math.max(high,top)
+                    rows[top]=true
+                    if geometry then geometry:write(table.concat({width,height,l,top-w,w,w,"class",WeHavePhonesTouchDB.touchScale},"\t"),"\n") end
+                end
+                local count=0 for _ in pairs(rows) do count=count+1 end
+                assert(count==(forms<=3 and 1 or 2),"up to three stances in a row, more in two rows")
+                assert(high-low<=height*.12*controls()+.01,"stances stay under Jump")
+                close((high+low)/2,hubY,"stances line up with the hub")
+            else assert(StanceBar.point[3]=="CENTER","stances stay in the footer when Jump covers the corner") end
+            for i=1,9 do exportGeometry(slots[i],width,height,"wheel") end
+            exportGeometry(objects.WeHavePhonesTouchWheelHub,width,height,"wheel")
+        end
+        end
+    end
+end
+setForms(2)
+WeHavePhonesTouchDB.touchScale=1.5
+UIParent:SetSize(1600,900)
+active.scripts.OnEvent(active,"DISPLAY_SIZE_CHANGED")
+-- Rings change in combat through the secure handlers only.
+combat=true
+secureClick(objects.WeHavePhonesTouchWheelNext,"LeftButton",true)
+assert(wheel.ring==nil or wheel.ring==1,"a ring changes once per key, on release")
+secureClick(objects.WeHavePhonesTouchWheelNext,"LeftButton",false)
+for i=1,9 do assert(slots[i].action==153+i,"ring 2 shows slots 154 to 162 in combat") end
+assert(objects.WeHavePhonesTouchWheelHub.text=="2" and WeHavePhonesTouchDB.wheelRing==2,"the hub shows the ring")
+secureClick(objects.WeHavePhonesTouchWheelPrevious,"LeftButton",false)
+secureClick(objects.WeHavePhonesTouchWheelPrevious,"LeftButton",false)
+for i=1,9 do assert(slots[i].action==171+i,"previous from ring 1 wraps to ring 4, slots 172 to 180") end
+secureClick(objects.WeHavePhonesTouchWheelHub,"RightButton",false)
+assert(slots[1].action==172,"a hold on the hub does not change ring")
+secureClick(objects.WeHavePhonesTouchWheelHub,"LeftButton",false)
+assert(slots[1].action==145,"a tap on the hub moves to the next ring")
+setSpecialBar(true)
+assert(not wheel.visible and ActionButton1.visible and objects.WeHavePhonesTouchPager.visible,
+    "vehicles and possession get the stock main bar back, in combat")
+setSpecialBar(false)
+assert(wheel.visible and not ActionButton1.visible,"the wheel returns after a vehicle")
+local beforeWheelNotice=notices
+menuChord("CTRL-F12")
+assert(notices==beforeWheelNotice+1 and wheel.visible,"the wheel switch waits for combat to end")
+combat=false
+active.scripts.OnEvent(active,"PLAYER_REGEN_ENABLED")
+assert(not wheel.visible and ActionButton1.visible and objects.WeHavePhonesTouchPager.visible,"switching the wheel off returns the stock grid")
+assert(MultiBar5.visible and MultiBar7.visible,"switching the wheel off returns Action Bars 6 to 8")
+for i=1,6 do
+    assert(stanceContainers[i].point[2]==StanceBar and stanceContainers[i].point[4]==(i-1)*33 and stanceContainers[i].point[5]==0,
+        "switching the wheel off returns Blizzard's stance layout")
+end
+menuChord("CTRL-F11")
+assert(wheel.visible and not ActionButton1.visible and not MultiBar6.visible,"the wheel can return in the same session")
+edit(slots[3])
+assert(objects.WeHavePhonesTouchEditor.visible and objects.WeHavePhonesTouchEditor.title.text=="Choose action for slot 147",
+    "holding a wheel slot edits that slot")
+objects.WeHavePhonesTouchEditor:Hide()
+boot(true,nil,true)
+assert(objects.WeHavePhonesTouchWheelSlot1.action==145 and objects.WeHavePhonesTouchWheelHub.text=="1",
+    "the ring in use is kept for the next login")
+boot(true)
+assert(ActionButton1.visible and MultiBar5.visible,"a launch without the wheel uses the stock grid")
 if geometry then geometry:close() end
 UIParent_ManageFramePositions()
 assert(StanceBar.point[3]=="CENTER" and PetActionBar.point[3]=="CENTER","late stock frame management preserves class controls")
@@ -640,7 +853,7 @@ local function checkWorkspace(panelNames,bagCount)
     end
 end
 local workspaceScenarios=0
-for _,scale in ipairs({1.25,1.5,1.75}) do
+for _,scale in ipairs(TOUCH_SCALES) do
     WeHavePhonesTouchDB.touchScale=scale
     for _,aspect in ipairs({1,6/5,5/4,4/3,3/2,16/10,16/9,2,19.5/9,21/9,32/9}) do
         UIParent:SetSize(768/scale*aspect,768/scale)
@@ -770,6 +983,10 @@ local before=notices
 edit(ActionButton1)
 assert(notices==before+1 and cursor[2]==900,"cursor contents never discarded to open editor")
 cursor=nil
+for chord,size in pairs({["CTRL-F9"]=.75,["CTRL-F10"]=.9,["SHIFT-F12"]=1.1,["SHIFT-F4"]=1.25,["SHIFT-F5"]=1.5,["SHIFT-F6"]=1.75}) do
+    menuChord(chord)
+    assert(UIParent:GetScale()==size and WeHavePhonesTouchDB.touchScale==size,"the touch menu sets the interface size to "..size)
+end
 menuChord("SHIFT-F6")
 assert(UIParent:GetScale()==1.75 and WeHavePhonesTouchDB.touchScale==1.75,"the touch menu changes the interface size")
 menuChord("SHIFT-F5")
@@ -797,7 +1014,7 @@ active.scripts.OnEvent(active,"PLAYER_ENTERING_WORLD")
 clock=clock+60
 ChatFrameUtil.ActivateChat(ChatFrame1EditBox)
 assert(ChatFrame1EditBox.point[1]=="TOP" and ChatFrame1EditBox.point[3]=="TOP"
-    and -ChatFrame1EditBox.point[5]>=UIParent:GetHeight()*.14 and -ChatFrame1EditBox.point[5]>=PlayerFrame:GetHeight()*PlayerFrame:GetScale(),
+    and -ChatFrame1EditBox.point[5]>=UIParent:GetHeight()*.14*controls() and -ChatFrame1EditBox.point[5]>=PlayerFrame:GetHeight()*PlayerFrame:GetScale(),
     "typing moves the chat box above the Android keyboard, below the unit frames and toolbar")
 ChatFrameUtil.DeactivateChat(ChatFrame1EditBox)
 assert(ChatFrame1EditBox.point[1]=="TOPLEFT" and ChatFrame1EditBox.point[2]==ChatFrame1 and ChatFrame1EditBox:GetWidth()==300,
@@ -853,8 +1070,8 @@ active.scripts.OnEvent(active,"PLAYER_REGEN_ENABLED")
 for k,v in pairs(original) do assert(values[k]==v,"restore CVar "..k) end
 assert(UIParent:GetScale()==1 and not extraBars[1] and not extraBars[2] and extraBars[3],"root scale and extra bars restored without changing another bar")
 assert(ChatFrame1.width==300 and ChatFrame1.height==150,"chat geometry restored")
-assert(StanceBar:GetScale()==1 and PetActionBar:GetScale()==1 and StatusTrackingBarManager:GetScale()==1,
-    "class and experience scaling restore on opt-out")
+assert(StanceBar:GetScale()==1 and PetActionBar:GetScale()==1 and StatusTrackingBarManager:GetScale()==1
+    and SwingTimerMainHandFrame:GetScale()==1,"class, experience and swing timer scaling restore on opt-out")
 assert(MicroMenuContainer.visible and BagsBar.visible and MicroButtonAndBagsBar.visible,"stock shortcuts restore on opt-out")
 assert(QuestWatchFrame.visible and QuestWatchFrame:GetScale()==1 and QuestWatchFrame.point[3]=="TOPRIGHT",
     "opting out restores stock tracker geometry and visibility")
@@ -985,7 +1202,7 @@ close(ActionButton1:GetScale()*45,36*1.35,"Retail actions have the same physical
 assert(ActionButton1.scripts.OnMouseUp,"Retail hotbars can be edited by holding")
 assert(held["CTRL-SHIFT-F6"]=="TOGGLEPROFESSIONBOOK","Retail opens its profession book instead of the removed Skills binding")
 if GEOMETRY_PATH then geometry=assert(io.open(GEOMETRY_PATH,"a")) end
-for _,scale in ipairs({1.25,1.5,1.75}) do
+for _,scale in ipairs(TOUCH_SCALES) do
     WeHavePhonesTouchDB.touchScale=scale
     for _,aspect in ipairs({1,6/5,5/4,4/3,3/2,16/10,16/9,2,19.5/9,21/9,32/9}) do
         local height=768/scale

@@ -76,13 +76,17 @@ final class MobileTouchMenu {
         ALT(Category.TYPING, R.drawable.wehavephones_touch_ic_option, 0),
         NO_MODIFIER(Category.TYPING, R.drawable.wehavephones_touch_ic_prohibit, R.string.wehavephones_touch_act_clear_modifier),
 
+        SIZE_75(Category.TOUCH, R.drawable.wehavephones_touch_ic_text_aa, R.string.wehavephones_touch_act_size, 75),
+        SIZE_90(Category.TOUCH, R.drawable.wehavephones_touch_ic_text_aa, R.string.wehavephones_touch_act_size, 90),
+        SIZE_110(Category.TOUCH, R.drawable.wehavephones_touch_ic_text_aa, R.string.wehavephones_touch_act_size, 110),
         SIZE_125(Category.TOUCH, R.drawable.wehavephones_touch_ic_text_aa, R.string.wehavephones_touch_act_size, 125),
         SIZE_150(Category.TOUCH, R.drawable.wehavephones_touch_ic_text_aa, R.string.wehavephones_touch_act_size, 150),
         SIZE_175(Category.TOUCH, R.drawable.wehavephones_touch_ic_text_aa, R.string.wehavephones_touch_act_size, 175),
         GUIDE(Category.TOUCH, R.drawable.wehavephones_touch_ic_hand_pointing, R.string.wehavephones_touch_act_guide),
         HIDE(Category.TOUCH, R.drawable.wehavephones_touch_ic_arrows_in_simple, R.string.wehavephones_touch_act_hide),
         UNDO(Category.TOUCH, R.drawable.wehavephones_touch_ic_arrow_counter_clockwise, R.string.wehavephones_touch_act_undo),
-        PAGE(Category.TOUCH, R.drawable.wehavephones_touch_ic_stack, R.string.wehavephones_touch_act_page);
+        PAGE(Category.TOUCH, R.drawable.wehavephones_touch_ic_stack, R.string.wehavephones_touch_act_page),
+        WHEEL(Category.TOUCH, R.drawable.wehavephones_touch_ic_squares_four, R.string.wehavephones_touch_act_wheel);
 
         final Category category;
         final int icon, label, arg;

@@ -5,6 +5,8 @@ import android.content.SharedPreferences;
 
 import androidx.preference.PreferenceManager;
 
+import com.wehavephones.mobile.addons.required.MobileTouchSetup;
+
 public final class WeHavePhonesConfig {
     public static final String BNET_SETUP_SCREEN_SIZE = "1280x800";
     private static final String KEY_GAME_REGION = "wehavephones_game_region_";
@@ -23,6 +25,7 @@ public final class WeHavePhonesConfig {
     public static final String KEY_MOBILE_TOUCH = "wehavephones_mobile_touch";
     private static final String KEY_MOBILE_TOUCH_SCALE = "wehavephones_mobile_touch_scale";
     private static final String KEY_MOBILE_TOUCH_GUIDE = "wehavephones_mobile_touch_guide_";
+    private static final String KEY_MOBILE_TOUCH_WHEEL = "wehavephones_mobile_touch_wheel";
     public static final String KEY_KEEP_RUNNING_IN_BACKGROUND = "wehavephones_keep_running_in_background";
     public static final String KEY_START_INPUT_BRIDGE = "wehavephones_start_input_bridge";
 
@@ -162,14 +165,22 @@ public final class WeHavePhonesConfig {
         prefs(context).edit().putBoolean(KEY_MOBILE_TOUCH, enabled).apply();
     }
 
-    /** Touch interface size for every character: 1.25, 1.5 or 1.75. Written to the addon before each launch. */
+    /** Touch interface size for every character, one of {@link MobileTouchSetup#SCALES}. Written to the addon before each launch. */
     public static float getMobileTouchScale(Context context) {
-        float scale = prefs(context).getFloat(KEY_MOBILE_TOUCH_SCALE, 1.5f);
-        return scale == 1.25f || scale == 1.75f ? scale : 1.5f;
+        return MobileTouchSetup.normalizeScale(prefs(context).getFloat(KEY_MOBILE_TOUCH_SCALE, MobileTouchSetup.DEFAULT_SCALE));
     }
 
     public static void setMobileTouchScale(Context context, float scale) {
         prefs(context).edit().putFloat(KEY_MOBILE_TOUCH_SCALE, scale).apply();
+    }
+
+    /** Whether wide games show the action wheel on Action Bars 6 to 8 instead of the stock action grid. */
+    public static boolean isMobileTouchWheel(Context context) {
+        return prefs(context).getBoolean(KEY_MOBILE_TOUCH_WHEEL, true);
+    }
+
+    public static void setMobileTouchWheel(Context context, boolean wheel) {
+        prefs(context).edit().putBoolean(KEY_MOBILE_TOUCH_WHEEL, wheel).apply();
     }
 
     /** Whether the touch guide for Play or Menus has been shown once. */

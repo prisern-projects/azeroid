@@ -2,6 +2,19 @@
 
 All notable changes to Azeroid. Each version's section becomes its GitHub Release notes.
 
+## [0.3.27] - 2026-11-18
+
+From upstream WeHavePhones (up to `5a91b5c`):
+
+- **Controller fixes** (`75e4e00`, `355f23d`): triggers that stop short of full travel now press (at a quarter
+  pull), triggers and the D-pad no longer drop while a stick moves, and the left stick no longer presses the
+  D-pad.
+- **Less GPU memory**: DXVK allocates in 16 MB chunks instead of 32 MB (`9fded62`), 60 to 85 MB less in Forever.
+- **Settings → Save memory with lower graphics** (`e98483c`), off by default: turns off shadows and
+  multithreaded rendering in every game. About 300 MB less GPU memory in Forever, and less work for the GPU.
+- **Touch controls**: an action wheel on Action Bars 6 to 8 (on by default in touch mode), 75%, 90% and 110%
+  interface sizes, and touch controls that scale with the interface size.
+
 ## [0.3.26] - 2026-11-10
 
 - **WeHavePhones' touch controls, as an option** (ported from upstream WeHavePhones as of `4d24630`). Turn on
